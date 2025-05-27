@@ -4,6 +4,8 @@ use MVC\middleware\AuthMiddleware;
 
 // Ensure only employees can access this page
 AuthMiddleware::requireEmployee();
+
+require_once __DIR__ . '/../../layouts/navbar.tpl.php';
 ?>
 
 <section class="home-grid">
@@ -52,6 +54,12 @@ AuthMiddleware::requireEmployee();
             <h3 class="title">Get All Properties Info</h3>
             <p class="tutor">Access the detailed count of all properties information for better management.</p>
             <a href="PropertyInfo" class="inline-btn">View Information</a>
+        </div>
+
+        <div class="box">
+            <h3 class="title">Sell Requests</h3>
+            <p class="tutor">View and process property transfer requests from sellers.</p>
+            <a href="sellRequest" class="inline-btn">View Requests</a>
         </div>
 
     </div>

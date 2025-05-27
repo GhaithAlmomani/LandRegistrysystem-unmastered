@@ -1,3 +1,90 @@
+<?php
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $dsn = 'mysql:host=127.0.0.1;dbname=wise';
+    $user = 'root';
+    $pass = '994422Gg';
+    $option = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',);
+    
+    try {
+        $con = new PDO($dsn, $user, $pass, $option);
+        $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        
+        // Generate tracking number
+        $trackingNumber = 'TRK-' . strtoupper(bin2hex(random_bytes(6)));
+        
+        // Start transaction
+        $con->beginTransaction();
+        
+        // Insert into property_transfers table
+        $stmt = $con->prepare("INSERT INTO property_transfers (
+            property_id,
+            seller_id,
+            buyer_name,
+            buyer_national_id,
+            buyer_phone,
+            buyer_address,
+            tracking_number,
+            status,
+            created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', NOW())");
+        
+        $stmt->execute([
+            $_POST['property_id'],
+            $_SESSION['user_id'],
+            $_POST['buyer_name'],
+            $_POST['buyer_national_id'],
+            $_POST['buyer_phone'],
+            $_POST['buyer_address'],
+            $trackingNumber
+        ]);
+        
+        // Update property status
+        $stmt = $con->prepare("UPDATE properties SET status = 'pending_transfer' WHERE id = ?");
+        $stmt->execute([$_POST['property_id']]);
+        
+        $con->commit();
+        
+        // Store tracking number in session for display
+        $_SESSION['tracking_number'] = $trackingNumber;
+        
+        // Redirect to prevent form resubmission
+        header('Location: ' . $_SERVER['PHP_SELF'] . '?success=1');
+        exit;
+        
+    } catch (PDOException $e) {
+        $con->rollBack();
+        $error = "Error processing your request. Please try again.";
+    }
+}
+
+// Get property details if property_id is set
+$propertyDetails = null;
+if (isset($_GET['property_id'])) {
+    try {
+        $dsn = 'mysql:host=127.0.0.1;dbname=wise';
+        $user = 'root';
+        $pass = '994422Gg';
+        $option = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',);
+        
+        $con = new PDO($dsn, $user, $pass, $option);
+        $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        
+        // Get user details
+        $stmt = $con->prepare("SELECT * FROM user WHERE User_Name = ?");
+        $stmt->execute([$_SESSION['Username']]);
+        $userDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // Get property details
+        $stmt = $con->prepare("SELECT * FROM properties WHERE id = ? AND owner_id = ?");
+        $stmt->execute([$_GET['property_id'], $userDetails['User_ID']]);
+        $propertyDetails = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        $error = "Error loading property details.";
+    }
+}
+?>
+
 <section>
     <div class="flex-container">
 
@@ -215,6 +302,12 @@
                 font-size: 4rem;
                 color: var(--main-color);
                 margin-bottom: 1.5rem;
+                background-image: url('/images/pic-6.jpg');
+                background-size: cover;
+                width: 100px;
+                height: 100px;
+                border-radius: 50%;
+                margin: 0 auto 1.5rem;
             }
         </style>
 
@@ -227,62 +320,73 @@
                 </tr>
                 <tr>
                     <td>Full name</td>
-                    <td><input type="text" placeholder="Enter your full name" class="box" /></td>
+                    <td><input type="text" name="seller_name" value="<?= htmlspecialchars($userDetails['User_Name'] ?? '') ?>" class="box" readonly /></td>
                 </tr>
                 <tr>
                     <td>National ID</td>
-                    <td><input type="email" placeholder="Enter your national ID" class="box" /></td>
+                    <td><input type="text" name="seller_national_id" value="<?= htmlspecialchars($userDetails['National_ID'] ?? '') ?>" class="box" readonly /></td>
                 </tr>
                 <tr>
                     <td>Phone</td>
-                    <td><input type="tel" placeholder="Enter your phone number" class="box" /></td>
+                    <td><input type="tel" name="seller_phone" value="<?= htmlspecialchars($userDetails['Phone'] ?? '') ?>" class="box" readonly /></td>
                 </tr>
                 <tr>
                     <td>Address</td>
-                    <td><input type="text" placeholder="Enter your address" class="box" /></td>
+                    <td><input type="text" name="seller_address" value="<?= htmlspecialchars($userDetails['Address'] ?? '') ?>" class="box" readonly /></td>
                 </tr>
             </table>
         </div>
 
-        <div class="table-container">
-            <h1 class="heading">Buyer Information</h1>
-            <table>
-                <tr>
-                    <th>Field</th>
-                    <th>Details</th>
-                </tr>
-                <tr>
-                    <td>Full name</td>
-                    <td><input type="text" placeholder="Enter your full name" class="box" /></td>
-                </tr>
-                <tr>
-                    <td>National ID</td>
-                    <td><input type="email" placeholder="Enter your national ID" class="box" /></td>
-                </tr>
-                <tr>
-                    <td>Phone</td>
-                    <td><input type="tel" placeholder="Enter your phone number" class="box" /></td>
-                </tr>
-                <tr>
-                    <td>Address</td>
-                    <td><input type="text" placeholder="Enter your address" class="box" /></td>
-                </tr>
-            </table>
-        </div>
+        <form method="POST" action="/sellReq" id="transferForm">
+            <?= \MVC\core\CSRFToken::generateFormField() ?>
+            <input type="hidden" name="property_id" value="<?= htmlspecialchars($_GET['property_id'] ?? '') ?>">
+            
+            <div class="table-container">
+                <h1 class="heading">Buyer Information</h1>
+                <table>
+                    <tr>
+                        <th>Field</th>
+                        <th>Details</th>
+                    </tr>
+                    <tr>
+                        <td>Full name</td>
+                        <td><input type="text" name="buyer_name" placeholder="Enter buyer's full name" class="box" required /></td>
+                    </tr>
+                    <tr>
+                        <td>National ID</td>
+                        <td><input type="text" name="buyer_national_id" placeholder="Enter buyer's national ID" class="box" required /></td>
+                    </tr>
+                    <tr>
+                        <td>Phone</td>
+                        <td><input type="tel" name="buyer_phone" placeholder="Enter buyer's phone number" class="box" required /></td>
+                    </tr>
+                    <tr>
+                        <td>Address</td>
+                        <td><input type="text" name="buyer_address" placeholder="Enter buyer's address" class="box" required /></td>
+                    </tr>
+                </table>
+            </div>
+        </form>
     </div>
 
     <div class="submit-container">
-        <button type="button" class="btn" onclick="generateTrackingNumber()">Submit</button>
+        <button type="submit" form="transferForm" class="btn">Submit</button>
     </div>
 
+    <?php if (isset($error)): ?>
+    <div class="error-message" style="color: red; text-align: center; margin-top: 1rem;">
+        <?= htmlspecialchars($error) ?>
+    </div>
+    <?php endif; ?>
+
     <!-- Popup Modal -->
-    <div id="popup" class="popup">
+    <div id="popup" class="popup <?= isset($_SESSION['tracking_number']) ? 'active' : '' ?>">
         <div class="popup-content">
             <span class="close" onclick="closePopup()">&times;</span>
             <div class="icon">✓</div>
             <h2>Request Submitted Successfully!</h2>
             <div class="tracking-container">
-                <p class="tracking-number" id="tracking-number"></p>
+                <p class="tracking-number" id="tracking-number"><?= htmlspecialchars($_SESSION['tracking_number'] ?? '') ?></p>
                 <button class="copy-btn" onclick="copyTrackingNumber()">Copy</button>
             </div>
             <p class="save-message">Please save this tracking number for future reference</p>
@@ -290,16 +394,6 @@
     </div>
 
     <script>
-        function generateTrackingNumber() {
-            const trackingNumber = 'TRK-' + Math.random().toString(36).substr(2, 9).toUpperCase();
-            document.getElementById('tracking-number').innerText = trackingNumber;
-            const popup = document.getElementById('popup');
-            popup.style.display = 'flex';
-            setTimeout(() => {
-                popup.classList.add('active');
-            }, 10);
-        }
-
         function closePopup() {
             const popup = document.getElementById('popup');
             popup.classList.remove('active');
@@ -321,6 +415,14 @@
                 }, 2000);
             });
         }
+
+        // Show popup if tracking number exists
+        <?php if (isset($_SESSION['tracking_number'])): ?>
+        document.addEventListener('DOMContentLoaded', function() {
+            const popup = document.getElementById('popup');
+            popup.style.display = 'flex';
+        });
+        <?php endif; ?>
     </script>
 
 </section>

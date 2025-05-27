@@ -12,7 +12,37 @@
     <link href="<?= url('style/stylesheet/main.css'); ?>" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
     <script src="<?= url('style/javascript/Abi.js'); ?>"></script>
+    <script>
+        // Add CSRF token to all forms
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+            const csrfToken = '<?= \MVC\core\CSRFToken::getToken() ?>';
+            
+            forms.forEach(form => {
+                if (!form.querySelector('input[name="csrf_token"]')) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrf_token';
+                    csrfInput.value = csrfToken;
+                    form.appendChild(csrfInput);
+                }
+            });
 
+            // Add CSRF token to all AJAX requests
+            const originalFetch = window.fetch;
+            window.fetch = function() {
+                let [resource, config] = arguments;
+                if (config === undefined) {
+                    config = {};
+                }
+                if (config.headers === undefined) {
+                    config.headers = {};
+                }
+                config.headers['X-CSRF-TOKEN'] = csrfToken;
+                return originalFetch(resource, config);
+            };
+        });
+    </script>
 </head>
 <body>
 <?php

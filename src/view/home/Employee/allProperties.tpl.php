@@ -1,3 +1,13 @@
+<?php
+require_once __DIR__ . '/../../../../src/middleware/AuthMiddleware.php';
+use MVC\middleware\AuthMiddleware;
+
+// Ensure only employees can access this page
+AuthMiddleware::requireEmployee();
+
+require_once __DIR__ . '/../../layouts/navbar.tpl.php';
+?>
+
 <section>
     <h1 class="heading">Employee Portal</h1>
 

@@ -3,35 +3,34 @@
 namespace MVC\middleware;
 
 class AuthMiddleware {
-    public static function requireAuth() {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-        
+    public static function requireLogin() {
         if (!isset($_SESSION['Username'])) {
-            header('Location: login');
+            header('Location: /login');
             exit();
         }
     }
 
-    public static function requireRole($requiredRole) {
-        self::requireAuth();
-        
-        if (!isset($_SESSION['role']) || $_SESSION['role'] != $requiredRole) {
-            header('Location: home');
+    public static function requireEmployee() {
+        self::requireLogin();
+        if (!isset($_SESSION['role']) || $_SESSION['role'] != 2) {
+            header('Location: /home');
             exit();
         }
     }
 
     public static function requireAdmin() {
-        self::requireRole(3);
-    }
-
-    public static function requireEmployee() {
-        self::requireRole(2);
+        self::requireLogin();
+        if (!isset($_SESSION['role']) || $_SESSION['role'] != 3) {
+            header('Location: /home');
+            exit();
+        }
     }
 
     public static function requireUser() {
-        self::requireRole(1);
+        self::requireLogin();
+        if (!isset($_SESSION['role']) || $_SESSION['role'] != 1) {
+            header('Location: /home');
+            exit();
+        }
     }
 } 

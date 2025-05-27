@@ -66,3 +66,41 @@ UNLOCK TABLES;
 ALTER TABLE `user`
 ADD COLUMN `User_Phone` varchar(20) DEFAULT NULL,
 ADD COLUMN `User_NationalID` varchar(20) DEFAULT NULL;
+
+-- Create properties table if it doesn't exist
+CREATE TABLE IF NOT EXISTS properties (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    owner_id INT NOT NULL,
+    district_name VARCHAR(100) NOT NULL,
+    village VARCHAR(100) NOT NULL,
+    block_name VARCHAR(100) NOT NULL,
+    plot_number VARCHAR(50) NOT NULL,
+    block_number VARCHAR(50) NOT NULL,
+    apartment_number VARCHAR(50),
+    status ENUM('active', 'pending_transfer', 'transferred') DEFAULT 'active',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (owner_id) REFERENCES user(User_ID)
+);
+
+-- Create property_transfers table
+CREATE TABLE IF NOT EXISTS property_transfers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    property_id INT NOT NULL,
+    seller_id INT NOT NULL,
+    buyer_name VARCHAR(100) NOT NULL,
+    buyer_national_id VARCHAR(50) NOT NULL,
+    buyer_phone VARCHAR(20) NOT NULL,
+    buyer_address TEXT NOT NULL,
+    tracking_number VARCHAR(20) NOT NULL UNIQUE,
+    status ENUM('pending', 'approved', 'rejected', 'completed') DEFAULT 'pending',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (property_id) REFERENCES properties(id),
+    FOREIGN KEY (seller_id) REFERENCES user(User_ID)
+);
+
+-- Add indexes for better performance
+CREATE INDEX idx_property_transfers_tracking ON property_transfers(tracking_number);
+CREATE INDEX idx_property_transfers_status ON property_transfers(status);
+CREATE INDEX idx_properties_status ON properties(status);

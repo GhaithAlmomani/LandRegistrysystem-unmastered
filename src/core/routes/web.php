@@ -70,6 +70,10 @@ Router::get('PropertyInfo', [HomeController::class, 'PropertyInfo']);
 Router::get('sell', [HomeController::class, 'sell']);
 
 Router::get('sellReq', [HomeController::class, 'sellReq']);
+Router::post('sellReq', [HomeController::class, 'sellReq']);
+
+Router::get('sellRequest', [HomeController::class, 'sellRequest']);
+Router::post('sellRequest', [HomeController::class, 'sellRequest']);
 
 Router::get('recentTransaction', [HomeController::class, 'recentTransaction']);
 

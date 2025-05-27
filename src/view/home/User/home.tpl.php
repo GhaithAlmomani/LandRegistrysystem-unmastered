@@ -4,6 +4,8 @@ use MVC\middleware\AuthMiddleware;
 
 // Ensure only regular users can access this page
 AuthMiddleware::requireUser();
+
+require_once __DIR__ . '/../../layouts/navbar.tpl.php';
 ?>
 
 <section class="home-grid">

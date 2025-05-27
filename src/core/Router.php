@@ -3,6 +3,7 @@
 namespace MVC\core;
 
 use MVC\core\routes\Methods;
+use MVC\core\middleware\CSRFMiddleware;
 
 class Router
 {
@@ -61,6 +62,28 @@ class Router
     {
         return static::$groupAttributes['middleware'] ?? [];
     }
+    private function handleMiddleware(array $middleware, callable $next)
+    {
+        // Add CSRF middleware for non-GET requests
+        if ($this->request->method() !== 'GET') {
+            $csrfMiddleware = new CSRFMiddleware();
+            if (!$csrfMiddleware->handle()) {
+                return false;
+            }
+        }
+
+        // Handle other middleware
+        foreach ($middleware as $m) {
+            if (is_string($m)) {
+                $m = new $m();
+            }
+            if (!$m->handle()) {
+                return false;
+            }
+        }
+
+        return $next();
+    }
     public function dispatch()
     {
         $path   = $this->request->path();
@@ -70,12 +93,11 @@ class Router
             if ($route['method'] === $method && preg_match($pattern, $path, $matches)){
                 $params     = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
                 $handler    = $route['handler'];
-                //$middleware = $route['middleware'];
+                $middleware = $route['middleware'];
                 $next = function () use ($handler, $params) {
                     return $this->invokeHandler($handler, $params);
                 };
-                //$next = Middleware::handleMiddleware($middleware, $next);
-                return $next($path);
+                return $this->handleMiddleware($middleware, $next);
             }
         }
         throw new Log("Page Not Found",404);

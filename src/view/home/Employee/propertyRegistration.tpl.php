@@ -1,3 +1,13 @@
+<?php
+require_once __DIR__ . '/../../../../src/middleware/AuthMiddleware.php';
+use MVC\middleware\AuthMiddleware;
+
+// Ensure only employees can access this page
+AuthMiddleware::requireEmployee();
+
+require_once __DIR__ . '/../../layouts/navbar.tpl.php';
+?>
+
 <section>
     <h1 class="heading">Employee Portal</h1>
 
@@ -123,6 +133,68 @@
         }
     </style>
 
+    <!-- Custom Alert Styles -->
+    <style>
+        .custom-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 8px;
+            font-size: 1.6rem;
+            color: white;
+            z-index: 1000;
+            display: none;
+            animation: slideIn 0.5s ease-out;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .alert-success {
+            background-color: #28a745;
+            border-left: 5px solid #1e7e34;
+        }
+
+        .alert-error {
+            background-color: #dc3545;
+            border-left: 5px solid #bd2130;
+        }
+
+        .alert-info {
+            background-color: #17a2b8;
+            border-left: 5px solid #117a8b;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+
+        .alert-close {
+            margin-left: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            float: right;
+        }
+    </style>
+
+    <!-- Alert Container -->
+    <div id="alertContainer"></div>
+
     <form id="registerForm">
 
         <h1 class="heading">Property Registration</h1>
@@ -170,11 +242,32 @@
             web3 = new Web3(window.ethereum);
             window.ethereum.enable();
         } else {
-            alert('Please install MetaMask to use this feature.');
+            showAlert('Please install MetaMask to use this feature.', 'error');
         }
 
         // Initialize contract
         contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        // Custom Alert Function
+        function showAlert(message, type = 'info') {
+            const alertContainer = document.getElementById('alertContainer');
+            const alert = document.createElement('div');
+            alert.className = `custom-alert alert-${type}`;
+            alert.innerHTML = `
+                <span>${message}</span>
+                <span class="alert-close" onclick="this.parentElement.remove()">&times;</span>
+            `;
+            alertContainer.appendChild(alert);
+            alert.style.display = 'block';
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                alert.style.animation = 'fadeOut 0.5s ease-out';
+                setTimeout(() => {
+                    alert.remove();
+                }, 500);
+            }, 5000);
+        }
 
         // Register property function
         async function registerProperty() {
@@ -184,21 +277,35 @@
             const latitude = document.getElementById('latitude').value;
             const longitude = document.getElementById('longitude').value;
 
-            const accounts = await web3.eth.getAccounts();
+            if (!id || !owner || !description || !latitude || !longitude) {
+                showAlert('Please fill in all fields', 'error');
+                return;
+            }
 
-            contract.methods.registerProperty(id, owner, description, latitude, longitude)
-            .send({ from: accounts[0] })
-            .on('transactionHash', function(hash) {
-            alert(`Transaction sent: ${hash}`);
-        })
-            .on('receipt', function(receipt) {
-            alert('Property registered successfully!');
-            console.log(receipt);
-        })
-            .on('error', function(error) {
-            alert('Error: ' + error.message);
-            console.error(error);
-        });
+            try {
+                const accounts = await web3.eth.getAccounts();
+                
+                showAlert('Processing transaction...', 'info');
+
+                contract.methods.registerProperty(id, owner, description, latitude, longitude)
+                .send({ from: accounts[0] })
+                .on('transactionHash', function(hash) {
+                    showAlert(`Transaction sent! Hash: ${hash.substring(0, 10)}...`, 'info');
+                })
+                .on('receipt', function(receipt) {
+                    showAlert('Property registered successfully!', 'success');
+                    console.log(receipt);
+                    // Clear form
+                    document.getElementById('registerForm').reset();
+                })
+                .on('error', function(error) {
+                    showAlert(`Error: ${error.message}`, 'error');
+                    console.error(error);
+                });
+            } catch (error) {
+                showAlert(`Error: ${error.message}`, 'error');
+                console.error(error);
+            }
         }
 </script>
 
