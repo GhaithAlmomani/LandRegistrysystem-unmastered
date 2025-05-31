@@ -1,1 +1,0 @@
-csrf_token|s:64:"5875d101fd9f8ac5cc4ea2c335c062be96fb4954376ef3496fdd4d1b6059af36";csrf_token_time|i:1748379017;Username|s:13:"OsamaAlmomani";role|i:1;error|s:119:"Error processing your request: SQLSTATE[23000]: Integrity constraint violation: 1048 Column 'buyer_name' cannot be null";

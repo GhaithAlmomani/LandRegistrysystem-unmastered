@@ -3,18 +3,33 @@
 ![PHP Version](https://img.shields.io/badge/PHP-8.3-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
 ![Framework](https://img.shields.io/badge/Framework-MVC-orange)
+![Blockchain](https://img.shields.io/badge/Blockchain-Enabled-brightgreen)
+![Security](https://img.shields.io/badge/Security-Enhanced-red)
 
-A secure and efficient platform for registering, transferring, and managing land properties. This system leverages advanced technologies including QR codes and blockchain to ensure transparent, secure, and user-friendly property management.
+A comprehensive and secure platform for registering, transferring, and managing land properties. This system leverages cutting-edge technologies including blockchain, QR codes, and smart contracts to ensure transparent, secure, and user-friendly property management.
 
 ## 🌟 Key Features
 
 ### Core System Features
 - **Property Registration**: Register and manage land properties with detailed information
-- **Ownership Transfer**: Secure and transparent property transfer system
+- **Ownership Transfer**: Secure and transparent property transfer system using smart contracts
 - **QR Code Integration**: Quick property verification and information access
-- **Blockchain Integration**: Immutable record-keeping and transaction history
+- **Blockchain Integration**: 
+  - Immutable record-keeping and transaction history
+  - Smart contract-based property transfers
+  - NFT representation of properties
+  - Cross-chain compatibility
+- **Advanced Security**:
+  - Multi-factor authentication (MFA)
+  - Biometric authentication
+  - Advanced encryption for documents
+  - Real-time security monitoring
 - **User Authentication**: Secure login and role-based access control
-- **Document Management**: Upload and manage property-related documents
+- **Document Management**: 
+  - Upload and manage property-related documents
+  - Automated document generation
+  - Version control
+  - Digital notary services
 - **Search Functionality**: Advanced property search and filtering
 
 ### Technical Features
@@ -27,6 +42,29 @@ A secure and efficient platform for registering, transferring, and managing land
 - **Session Management**: Secure user session handling
 - **Hash Utilities**: Advanced security features
 - **Data Validation**: Robust input validation system
+- **Smart Contract Integration**: Automated property transfer workflows
+- **API Integration**: Banking, government, and insurance system integration
+
+### Advanced Features
+- **AI-Powered Analytics**:
+  - Property value prediction
+  - Market trend analysis
+  - Investment opportunity scoring
+  - Risk assessment
+- **Mobile Application**:
+  - Native iOS and Android support
+  - Offline functionality
+  - Push notifications
+  - Mobile document scanning
+- **IoT Integration**:
+  - Property monitoring
+  - Smart access control
+  - Utility management
+- **Financial Tools**:
+  - Investment portfolio management
+  - Automated payment processing
+  - Financial reporting
+  - Risk assessment
 
 ## 🚀 Getting Started
 
@@ -124,8 +162,14 @@ LandRegistrysystem/
 ├── src/             # Source code
 │   ├── controller/  # Controllers
 │   ├── core/        # Core framework
+│   ├── blockchain/  # Blockchain integration
+│   ├── smartcontracts/ # Smart contract implementations
+│   ├── api/         # API integrations
+│   ├── services/    # Business logic services
 │   └── view/        # Views and templates
 ├── storage/         # Storage for logs and sessions
+├── mobile/          # Mobile application code
+├── tests/           # Test suites
 └── vendor/          # Dependencies
 ```
 
@@ -138,10 +182,46 @@ DB_HOST=localhost
 DB_NAME=land_registry
 DB_USER=your_username
 DB_PASS=your_password
+BLOCKCHAIN_NETWORK=mainnet
+API_KEY=your_api_key
+SMART_CONTRACT_ADDRESS=your_contract_address
 ```
 
-### Apache Configuration
-Ensure mod_rewrite is enabled and .htaccess files are allowed.
+### Required Services
+- Apache 2.4.6 or higher
+- PHP 8.3 or higher
+- MySQL 8.0 or higher
+- Node.js 16+ (for blockchain integration)
+- Composer (for PHP dependencies)
+- npm (for blockchain dependencies)
+
+## 📱 Mobile Application
+
+The system includes native mobile applications for both iOS and Android platforms, providing:
+- Property search and viewing
+- Document management
+- QR code scanning
+- Push notifications
+- Offline functionality
+- Biometric authentication
+
+## 🔗 API Integration
+
+The system provides RESTful APIs for integration with:
+- Banking systems
+- Government agencies
+- Insurance companies
+- Real estate platforms
+- Payment gateways
+
+## 🔒 Security Features
+
+- Multi-factor authentication
+- Biometric verification
+- Blockchain-based verification
+- Advanced encryption
+- Real-time monitoring
+- Automated fraud detection
 
 ## 🤝 Contributing
 
@@ -166,7 +246,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, please open an issue in the GitHub repository or contact the development team.
+For support, please:
+1. Open an issue in the GitHub repository
+2. Contact the development team
+3. Check our documentation at [docs.landregistry.com](https://docs.landregistry.com)
+4. Join our community forum
 
 ---
 

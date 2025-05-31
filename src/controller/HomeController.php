@@ -61,7 +61,87 @@ class HomeController extends Controller
     public function ownedassets(): bool|array|string
     {
         AuthMiddleware::requireUser();
-        return $this->render('home.User.ownedassets');
+
+        try {
+            $dsn = 'mysql:host=127.0.0.1;dbname=wise';
+            $user = 'root';
+            $pass = '994422Gg';
+            $option = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',);
+
+            $con = new PDO($dsn, $user, $pass, $option);
+            $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+            // Get user ID from username
+            $stmt = $con->prepare("SELECT User_ID, User_Name FROM user WHERE User_Name = ?");
+            $stmt->execute([$_SESSION['Username']]);
+            $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$userData) {
+                throw new Exception("User not found");
+            }
+
+            $userId = $userData['User_ID'];
+
+            // Get properties owned by the user
+            $stmt = $con->prepare("
+                SELECT 
+                    p.id,
+                    u.User_Name as owner_name,
+                    p.district_name,
+                    p.village,
+                    p.block_name,
+                    p.plot_number,
+                    p.block_number,
+                    p.apartment_number,
+                    p.status,
+                    p.created_at
+                FROM properties p
+                JOIN user u ON p.owner_id = u.User_ID
+                WHERE p.owner_id = ?
+                ORDER BY p.created_at DESC
+            ");
+            $stmt->execute([$userId]);
+            $ownedProperties = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            // Calculate statistics
+            $totalAssets = count($ownedProperties);
+            $landCount = 0;
+            $apartmentCount = 0;
+
+            foreach ($ownedProperties as $property) {
+                // Determine property type: Land if apartment_number is null or '-', otherwise Apartment
+                $propertyType = (empty($property['apartment_number']) || $property['apartment_number'] === '-') ? 'land' : 'apartment';
+                
+                if ($propertyType === 'land') {
+                    $landCount++;
+                } else {
+                    $apartmentCount++;
+                }
+            }
+
+            // Get orders count for the user (as seller or buyer)
+            $stmt = $con->prepare("SELECT COUNT(*) FROM property_transfers pt JOIN user u ON u.User_NationalID = pt.buyer_national_id WHERE pt.seller_id = ? OR pt.buyer_national_id = ?");
+            
+            // Get user's national ID for the buyer filter
+            $stmtUserNationalID = $con->prepare("SELECT User_NationalID FROM user WHERE User_ID = ?");
+            $stmtUserNationalID->execute([$userId]);
+            $userNationalID = $stmtUserNationalID->fetchColumn();
+
+            $stmt->execute([$userId, $userNationalID]);
+            $ordersCount = $stmt->fetchColumn();
+
+            return $this->render('home.User.ownedassets', [
+                'ownedProperties' => $ownedProperties,
+                'totalAssets' => $totalAssets,
+                'ordersCount' => $ordersCount,
+                'landCount' => $landCount,
+                'apartmentCount' => $apartmentCount
+            ]);
+
+        } catch (Exception $e) {
+            // Handle error appropriately
+            return $this->render('home.User.ownedassets', ['error' => $e->getMessage(), 'ownedProperties' => [], 'totalAssets' => 0, 'ordersCount' => 0, 'landCount' => 0, 'apartmentCount' => 0]);
+        }
     }
     public function profile(): bool|array|string
     {
@@ -272,6 +352,57 @@ class HomeController extends Controller
     {
         AuthMiddleware::requireUser();
         return $this->render('home.User.recentTransaction');
+    }
+
+    public function orders(): bool|array|string
+    {
+        AuthMiddleware::requireUser();
+        
+        try {
+            $dsn = 'mysql:host=127.0.0.1;dbname=wise';
+            $user = 'root';
+            $pass = '994422Gg';
+            $option = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',);
+            
+            $con = new PDO($dsn, $user, $pass, $option);
+            $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            // Get user ID from username
+            $stmt = $con->prepare("SELECT User_ID, User_NationalID FROM user WHERE User_Name = ?");
+            $stmt->execute([$_SESSION['Username']]);
+            $userData = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$userData) {
+                throw new Exception("User not found");
+            }
+            
+            // Get all orders for the user (both as seller and buyer)
+            $stmt = $con->prepare("
+                SELECT 
+                    pt.*,
+                    CONCAT(p.district_name, ', ', p.village) as property_name,
+                    CONCAT(p.block_name, ' Block ', p.block_number, ', Plot ', p.plot_number, 
+                           CASE WHEN p.apartment_number IS NOT NULL THEN CONCAT(', Apt ', p.apartment_number) ELSE '' END) as property_location,
+                    CASE 
+                        WHEN pt.seller_id = ? THEN 'seller'
+                        WHEN u.User_NationalID = pt.buyer_national_id THEN 'buyer'
+                        ELSE 'unknown'
+                    END as user_role
+                FROM property_transfers pt
+                JOIN properties p ON pt.property_id = p.id
+                LEFT JOIN user u ON u.User_NationalID = pt.buyer_national_id
+                WHERE pt.seller_id = ? OR pt.buyer_national_id = ?
+                ORDER BY pt.created_at DESC
+            ");
+            $stmt->execute([$userData['User_ID'], $userData['User_ID'], $userData['User_NationalID']]);
+            $orders = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            
+            return $this->render('home.User.Orders', ['orders' => $orders]);
+            
+        } catch (Exception $e) {
+            // Handle error appropriately
+            return $this->render('home.User.Orders', ['error' => $e->getMessage()]);
+        }
     }
 
     public function employeePortal(): bool|array|string

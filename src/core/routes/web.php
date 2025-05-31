@@ -81,6 +81,8 @@ Router::get('employeePortal', [HomeController::class, 'employeePortal']);
 
 Router::get('adminPortal', [HomeController::class, 'adminPortal']);
 
+Router::get('orders', [HomeController::class, 'orders']);
+
 // Logout Route
 Router::get('logout', [LogoutController::class, 'index']);
 

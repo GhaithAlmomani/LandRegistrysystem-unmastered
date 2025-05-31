@@ -6,6 +6,38 @@ use MVC\middleware\AuthMiddleware;
 AuthMiddleware::requireAdmin();
 
 // --- Admin Dashboard Logic ---
+// Database connection
+try {
+    $dsn = 'mysql:host=127.0.0.1;dbname=wise';
+    $user = 'root';
+    $pass = '994422Gg';
+    $option = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',);
+    
+    $con = new PDO($dsn, $user, $pass, $option);
+    $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+    // Get total users (all users in the system)
+    $stmt = $con->prepare("SELECT COUNT(*) FROM user");
+    $stmt->execute();
+    $total_users = $stmt->fetchColumn();
+    
+    // Get total assets
+    $stmt = $con->prepare("SELECT COUNT(*) FROM properties");
+    $stmt->execute();
+    $total_assets = $stmt->fetchColumn();
+    
+    // Get total orders
+    $stmt = $con->prepare("SELECT COUNT(*) FROM property_transfers");
+    $stmt->execute();
+    $total_orders = $stmt->fetchColumn();
+    
+} catch (PDOException $e) {
+    // If database connection fails, use default values
+    $total_users = 0;
+    $total_assets = 0;
+    $total_orders = 0;
+}
+
 // Etherscan API details
 $etherscan_api_key = '1A2RYWWYNQDPNGIQ1TNKHV9WWBBI63VKM5';
 $contract_address = '0xfac2Cf4A0ECe7e748e5C7047Db1CA596462436AB';
@@ -45,9 +77,6 @@ if ($tx_data && isset($tx_data['result']) && is_array($tx_data['result'])) {
 $tx_counts = array_values($tx_per_day);
 
 // --- Mock values for overview cards (replace with real queries as needed) ---
-$total_users = 123;
-$total_assets = 45;
-$total_orders = 67;
 $total_transactions = array_sum($tx_counts);
 ?>
 

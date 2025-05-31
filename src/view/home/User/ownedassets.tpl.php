@@ -212,19 +212,19 @@
         <div class="stats-container">
             <div class="stat-card">
                 <h3>Total Assets</h3>
-                <p>2</p>
+                <p><?php echo htmlspecialchars($totalAssets ?? 0); ?></p>
             </div>
             <div class="stat-card">
-                <h3>Total Area</h3>
-                <p>1,786 M²</p>
+                <h3>Orders Number</h3>
+                <p><?php echo htmlspecialchars($ordersCount ?? 0); ?></p>
             </div>
             <div class="stat-card">
-                <h3>Properties in Amman</h3>
-                <p>1</p>
+                <h3>Lands</h3>
+                <p><?php echo htmlspecialchars($landCount ?? 0); ?></p>
             </div>
             <div class="stat-card">
-                <h3>Properties in Zarqa</h3>
-                <p>1</p>
+                <h3>Apartments</h3>
+                <p><?php echo htmlspecialchars($apartmentCount ?? 0); ?></p>
             </div>
         </div>
 
@@ -233,63 +233,54 @@
         </div>
 
         <div class="filter-container">
-            <button class="filter-btn active" onclick="filterTable('all')">All</button>
-            <button class="filter-btn" onclick="filterTable('amman')">Amman</button>
-            <button class="filter-btn" onclick="filterTable('zarqa')">Zarqa</button>
-            <button class="filter-btn" onclick="filterTable('land')">Land</button>
-            <button class="filter-btn" onclick="filterTable('apartment')">Apartment</button>
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="land">Land</button>
+            <button class="filter-btn" data-filter="apartment">Apartment</button>
         </div>
 
         <div class="table-container">
             <table>
                 <thead>
                     <tr>
-                        <th>Number</th>
+                        <th>ID</th>
                         <th>Owner</th>
-                        <th>Land Directorate</th>
                         <th>District Name</th>
                         <th>Village</th>
                         <th>Block Name</th>
-                        <th>Type</th>
                         <th>Plot Number</th>
                         <th>Block Number</th>
-                        <th>District Number</th>
                         <th>Apartment Number</th>
-                        <th>Apartment floor</th>
-                        <th>Area (M²)</th>
+                        <th>Status</th>
+                        <th>Created At</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td>1</td>
-                        <td>Ghaith Almomani</td>
-                        <td>Zarqa Directorate</td>
-                        <td>Zarqa</td>
-                        <td>Albatrawi</td>
-                        <td>Southern Batrawi</td>
-                        <td>Own</td>
-                        <td>0021</td>
-                        <td>22514</td>
-                        <td>14</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>866</td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Khaled Khader</td>
-                        <td>Amman Directorate</td>
-                        <td>Amman</td>
-                        <td>Almsherfeh</td>
-                        <td>Northen Marka</td>
-                        <td>Own</td>
-                        <td>0031</td>
-                        <td>28124</td>
-                        <td>16</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>920</td>
-                    </tr>
+                    <?php
+                    if (isset($error)) {
+                        echo '<tr><td colspan="10" class="text-center text-danger">' . htmlspecialchars($error) . '</td></tr>';
+                    } else if (empty($ownedProperties)) {
+                        echo '<tr><td colspan="10" class="text-center">No owned properties found</td></tr>';
+                    } else {
+                        foreach ($ownedProperties as $property) {
+                            // Determine property type: Land if apartment_number is null or '-', otherwise Apartment
+                            $propertyType = (empty($property['apartment_number']) || $property['apartment_number'] === '-') ? 'Land' : 'Apartment';
+                            ?>
+                            <tr>
+                                <td><?php echo htmlspecialchars($property['id']); ?></td>
+                                <td><?php echo htmlspecialchars($property['owner_name']); ?></td>
+                                <td><?php echo htmlspecialchars($property['district_name']); ?></td>
+                                <td><?php echo htmlspecialchars($property['village']); ?></td>
+                                <td><?php echo htmlspecialchars($property['block_name']); ?></td>
+                                <td><?php echo htmlspecialchars($property['plot_number']); ?></td>
+                                <td><?php echo htmlspecialchars($property['block_number']); ?></td>
+                                <td><?php echo (empty($property['apartment_number']) || $property['apartment_number'] === '-') ? '-' : htmlspecialchars($property['apartment_number']); ?></td>
+                                <td><?php echo htmlspecialchars(ucfirst($property['status'])); ?></td>
+                                <td><?php echo htmlspecialchars(date('Y-m-d', strtotime($property['created_at']))); ?></td>
+                            </tr>
+                            <?php
+                        }
+                    }
+                    ?>
                 </tbody>
             </table>
         </div>
@@ -306,10 +297,13 @@
                 const td = tr[i].getElementsByTagName('td');
                 let found = false;
                 
+                // Search across all currently displayed columns
                 for (let j = 0; j < td.length; j++) {
-                    if (td[j].textContent.toUpperCase().indexOf(filter) > -1) {
-                        found = true;
-                        break;
+                    if (td[j]) { // Check if td[j] exists
+                        if (td[j].textContent.toUpperCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
                     }
                 }
                 
@@ -320,37 +314,121 @@
         function filterTable(filter) {
             const buttons = document.querySelectorAll('.filter-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            
+            if (event.target.classList.contains('filter-btn')){
+                 event.target.classList.add('active');
+            }
+
+            applyFilters(); // Apply all active filters
+        }
+
+        function applyFilters() {
+            const selectedType = document.querySelector('.filter-btn.active').getAttribute('data-filter');
+            const searchFilter = document.getElementById('searchInput').value.toLowerCase();
 
             const table = document.querySelector('table');
             const tr = table.getElementsByTagName('tr');
 
             for (let i = 1; i < tr.length; i++) {
                 const td = tr[i].getElementsByTagName('td');
-                if (filter === 'all') {
-                    tr[i].style.display = '';
-                } else {
-                    const district = td[3].textContent.toLowerCase();
-                    const type = td[6].textContent.toLowerCase();
+                let rowVisible = true;
+
+                if (td.length > 7) { // Ensure row has enough columns for apartment number
+                    // Get property type based on apartment number
+                    const apartmentNumberText = td[7].textContent.trim();
+                    const propertyType = (apartmentNumberText === '-' || apartmentNumberText === '') ? 'land' : 'apartment';
                     
-                    if (filter === 'amman' && district === 'amman') {
-                        tr[i].style.display = '';
-                    } else if (filter === 'zarqa' && district === 'zarqa') {
-                        tr[i].style.display = '';
-                    } else if (filter === 'land' && type === 'land') {
-                        tr[i].style.display = '';
-                    } else if (filter === 'apartment' && type === 'apartment') {
-                        tr[i].style.display = '';
-                    } else {
-                        tr[i].style.display = 'none';
+                    // Apply type filter (Land/Apartment/All)
+                    if (selectedType !== 'all') {
+                        if (selectedType === 'land' && propertyType !== 'land') {
+                            rowVisible = false;
+                        } else if (selectedType === 'apartment' && propertyType !== 'apartment') {
+                            rowVisible = false;
+                        }
                     }
+
+                    // Apply search filter
+                    if (searchFilter) {
+                        let searchMatch = false;
+                        for (let j = 0; j < td.length; j++) {
+                            if (td[j] && td[j].textContent.toLowerCase().includes(searchFilter)) {
+                                searchMatch = true;
+                                break;
+                            }
+                        }
+                        if (!searchMatch) {
+                            rowVisible = false;
+                        }
+                    }
+
+
+                     tr[i].style.display = rowVisible ? '' : 'none';
+
+                } else {
+                    // Hide rows that don't have enough columns
+                     tr[i].style.display = 'none';
                 }
             }
         }
 
+        // Initial display update and event listeners setup
+        document.addEventListener('DOMContentLoaded', function() {
+             // Attach event listeners to type filter buttons
+            const typeFilterButtons = document.querySelectorAll('.filter-btn[data-filter]');
+            typeFilterButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                     // Set active class here
+                     document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                     this.classList.add('active');
+                     applyFilters();
+                });
+            });
+
+             // Attach event listener to search input
+            document.getElementById('searchInput').addEventListener('keyup', function() {
+                applyFilters();
+            });
+
+             // Initial filter application to display all properties
+            applyFilters();
+        });
+
+
         function exportToExcel() {
-            // This is a placeholder for Excel export functionality
-            alert('Export to Excel functionality will be implemented here');
+            const table = document.querySelector('table');
+            const rows = table.querySelectorAll('tr');
+            const csv = [];
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                // Only include visible rows (excluding the header row based on display style)
+                if (i === 0 || row.style.display !== 'none') {
+                    const cols = row.querySelectorAll('td, th');
+                    const rowData = [];
+                    for (let j = 0; j < cols.length; j++) {
+                        let data = cols[j].textContent.trim();
+                        // Escape double quotes by doubling them
+                        data = data.replace(/"/g, '""');
+                        // Enclose data in double quotes if it contains commas, double quotes, or newlines
+                        if (data.includes(',') || data.includes('"') || data.includes('\n')) {
+                            data = '"' + data + '"';
+                        }
+                        rowData.push(data);
+                    }
+                    csv.push(rowData.join(','));
+                }
+            }
+
+            // Create CSV file
+            const csvString = csv.join('\n');
+            const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.setAttribute('download', 'owned_assets.csv');
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
     </script>
 

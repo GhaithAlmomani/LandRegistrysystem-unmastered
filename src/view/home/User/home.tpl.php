@@ -41,7 +41,7 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
         <div class="box">
             <h3 class="title">Orders</h3>
             <p class="tutor">Review the process of your application.</p>
-            <a href="sellReq" class="inline-btn">Review Now</a>
+            <a href="orders" class="inline-btn">Review Now</a>
         </div>
 
         <div class="box">
