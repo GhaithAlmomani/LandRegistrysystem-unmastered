@@ -330,6 +330,88 @@ class HomeController extends Controller
                     $stmt = $con->prepare("UPDATE properties SET status = 'transferred', owner_id = ? WHERE id = ?");
                     $stmt->execute([$buyer['User_ID'], $transfer['property_id']]);
                     
+                    // Generate transfer document
+                    $stmt = $con->prepare("
+                        SELECT pt.*, p.*, u.User_Name, u.User_NationalID, u.User_Phone, u.User_Email
+                        FROM property_transfers pt
+                        JOIN properties p ON pt.property_id = p.id
+                        JOIN user u ON pt.seller_id = u.User_ID
+                        WHERE pt.tracking_number = ?
+                    ");
+                    $stmt->execute([$_POST['tracking_number']]);
+                    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+                    
+                    if ($result) {
+                        $transferDetails = [
+                            'tracking_number' => $result['tracking_number'],
+                            'status' => 'completed',
+                            'created_at' => $result['created_at']
+                        ];
+                        
+                        $propertyDetails = [
+                            'id' => $result['property_id'],
+                            'district_name' => $result['district_name'],
+                            'village' => $result['village'],
+                            'block_name' => $result['block_name'],
+                            'plot_number' => $result['plot_number'],
+                            'block_number' => $result['block_number'],
+                            'apartment_number' => $result['apartment_number']
+                        ];
+                        
+                        $sellerDetails = [
+                            'User_Name' => $result['User_Name'],
+                            'National_ID' => $result['User_NationalID'],
+                            'Phone' => $result['User_Phone'],
+                            'Address' => $result['User_Email']
+                        ];
+                        
+                        $buyerDetails = [
+                            'buyer_name' => $result['buyer_name'],
+                            'buyer_national_id' => $result['buyer_national_id'],
+                            'buyer_phone' => $result['buyer_phone'],
+                            'buyer_address' => $result['buyer_address']
+                        ];
+                        
+                        // Generate PDF document
+                        $docGenerator = new \MVC\core\DocumentGenerator();
+                        $docGenerator->generateTransferDocument($transferDetails, $propertyDetails, $sellerDetails, $buyerDetails);
+                        
+                        // Create storage directory if it doesn't exist
+                        $storageDir = __DIR__ . '/../../storage/documents/transfers';
+                        if (!file_exists($storageDir)) {
+                            if (!mkdir($storageDir, 0777, true)) {
+                                throw new Exception("Failed to create storage directory");
+                            }
+                        }
+                        
+                        // Save the document
+                        $documentPath = $storageDir . '/' . $transferDetails['tracking_number'] . '.pdf';
+                        $docGenerator->Output($documentPath, 'F');
+                        
+                        // Verify the file was created
+                        if (!file_exists($documentPath)) {
+                            throw new Exception("Failed to save document file");
+                        }
+                        
+                        // Verify file size
+                        if (filesize($documentPath) === 0) {
+                            throw new Exception("Generated document file is empty");
+                        }
+                        
+                        // Store document path in database
+                        $stmt = $con->prepare("UPDATE property_transfers SET document_path = ? WHERE tracking_number = ?");
+                        $stmt->execute([$documentPath, $transferDetails['tracking_number']]);
+                        
+                        // Verify the database update
+                        $stmt = $con->prepare("SELECT document_path FROM property_transfers WHERE tracking_number = ?");
+                        $stmt->execute([$transferDetails['tracking_number']]);
+                        $checkResult = $stmt->fetch(PDO::FETCH_ASSOC);
+                        
+                        if (empty($checkResult['document_path'])) {
+                            throw new Exception("Failed to store document path in database");
+                        }
+                    }
+                    
                     $_SESSION['success'] = "Transfer request approved successfully. Property ownership has been transferred.";
                 } else {
                     // Update transfer status
@@ -418,5 +500,71 @@ class HomeController extends Controller
             'propertyDetails' => $propertyDetails ?? null,
             'sellerDetails' => $sellerDetails ?? null
         ]);
+    }
+
+    public function downloadDocument(): void
+    {
+        AuthMiddleware::requireEmployee();
+        
+        try {
+            if (!isset($_GET['tracking_number'])) {
+                throw new Exception("Tracking number is required");
+            }
+            
+            $dsn = 'mysql:host=127.0.0.1;dbname=wise';
+            $user = 'root';
+            $pass = '994422Gg';
+            $option = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',);
+            
+            $con = new PDO($dsn, $user, $pass, $option);
+            $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            
+            // Get document path
+            $stmt = $con->prepare("SELECT document_path FROM property_transfers WHERE tracking_number = ? AND status = 'completed'");
+            $stmt->execute([$_GET['tracking_number']]);
+            $result = $stmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$result) {
+                throw new Exception("No document found for this transfer request");
+            }
+            
+            if (empty($result['document_path'])) {
+                throw new Exception("Document path is empty in the database");
+            }
+            
+            if (!file_exists($result['document_path'])) {
+                throw new Exception("Document file not found at path: " . $result['document_path']);
+            }
+            
+            // Get file size
+            $fileSize = filesize($result['document_path']);
+            if ($fileSize === 0) {
+                throw new Exception("Document file is empty");
+            }
+            
+            // Set headers for PDF display
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="transfer_document_' . $_GET['tracking_number'] . '.pdf"');
+            header('Content-Length: ' . $fileSize);
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+            
+            // Clear any previous output
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            
+            // Output the PDF file
+            readfile($result['document_path']);
+            exit;
+            
+        } catch (Exception $e) {
+            // Log the error for debugging
+            error_log("Document download error: " . $e->getMessage());
+            
+            $_SESSION['error'] = "Error displaying document: " . $e->getMessage();
+            header('Location: sellRequest');
+            exit;
+        }
     }
 }

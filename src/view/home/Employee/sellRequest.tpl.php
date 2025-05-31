@@ -67,6 +67,21 @@ unset($_SESSION['error'], $_SESSION['success']);
                     <p><strong>Tracking Number:</strong> <?= htmlspecialchars($transferDetails['tracking_number']) ?></p>
                     <p><strong>Status:</strong> <?= htmlspecialchars($transferDetails['status']) ?></p>
                     <p><strong>Created At:</strong> <?= htmlspecialchars($transferDetails['created_at']) ?></p>
+                    <?php if ($transferDetails['status'] === 'completed'): ?>
+                        <div class="document-actions" style="margin-top: 1rem;">
+                            <a href="downloadDocument?tracking_number=<?= urlencode($transferDetails['tracking_number']) ?>" 
+                               class="inline-btn" target="_blank" style="margin-right: 1rem;">
+                                <i class="fas fa-eye"></i> View Document
+                            </a>
+                            <button onclick="printDocument('<?= urlencode($transferDetails['tracking_number']) ?>')" 
+                                    class="inline-btn" style="background-color: #17a2b8;">
+                                <i class="fas fa-print"></i> Print Document
+                            </button>
+                        </div>
+                        <div id="pdfViewer" style="margin-top: 2rem; display: none;">
+                            <iframe id="pdfFrame" style="width: 100%; height: 600px; border: 1px solid #ddd; border-radius: 0.5rem;"></iframe>
+                        </div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="box">
@@ -115,6 +130,43 @@ unset($_SESSION['error'], $_SESSION['success']);
         </div>
     <?php endif; ?>
 </section>
+
+<script>
+function printDocument(trackingNumber) {
+    // Open the document in a new window
+    var printWindow = window.open('downloadDocument?tracking_number=' + trackingNumber, '_blank');
+    
+    // Wait for the PDF to load
+    printWindow.onload = function() {
+        // Print the document
+        printWindow.print();
+    };
+}
+
+// Add event listener for the View Document button
+document.addEventListener('DOMContentLoaded', function() {
+    const viewButtons = document.querySelectorAll('.document-actions .inline-btn');
+    viewButtons.forEach(button => {
+        if (button.textContent.includes('View Document')) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const trackingNumber = this.href.split('=')[1];
+                const pdfViewer = document.getElementById('pdfViewer');
+                const pdfFrame = document.getElementById('pdfFrame');
+                
+                // Show the PDF viewer
+                pdfViewer.style.display = 'block';
+                
+                // Load the PDF in the iframe
+                pdfFrame.src = 'downloadDocument?tracking_number=' + trackingNumber;
+                
+                // Scroll to the PDF viewer
+                pdfViewer.scrollIntoView({ behavior: 'smooth' });
+            });
+        }
+    });
+});
+</script>
 
 <style>
     .search-container {
@@ -228,5 +280,34 @@ unset($_SESSION['error'], $_SESSION['success']);
     .inline-btn:hover {
         background-color: #003d06;
         transform: translateY(-2px);
+    }
+
+    .document-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .document-actions .inline-btn {
+        margin: 0;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+
+    .document-actions .inline-btn i {
+        font-size: 1.4rem;
+    }
+
+    #pdfViewer {
+        background: var(--white);
+        padding: 1rem;
+        border-radius: 1rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    #pdfFrame {
+        background: white;
     }
 </style> 

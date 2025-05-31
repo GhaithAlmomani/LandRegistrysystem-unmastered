@@ -94,6 +94,7 @@ CREATE TABLE IF NOT EXISTS property_transfers (
     buyer_address TEXT NOT NULL,
     tracking_number VARCHAR(20) NOT NULL UNIQUE,
     status ENUM('pending', 'approved', 'rejected', 'completed') DEFAULT 'pending',
+    document_path VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (property_id) REFERENCES properties(id),
