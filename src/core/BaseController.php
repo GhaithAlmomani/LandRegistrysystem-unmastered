@@ -3,8 +3,6 @@
 namespace MVC\core;
 
 use MVC\core\validations\Validation;
-use PDO;
-use PDOException;
 
 abstract class BaseController
 {
@@ -16,6 +14,22 @@ abstract class BaseController
     public function render(string $view, array $params = []): bool|array|string
     {
         $this->connectDatabase();
+
+        // Provide current user to layouts (no DB queries in views).
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (!array_key_exists('currentUser', $this->layoutParams)) {
+            $this->layoutParams['currentUser'] = null;
+            if (!empty($_SESSION['Username']) && class_exists(\MVC\model\User::class)) {
+                try {
+                    $this->layoutParams['currentUser'] = \MVC\model\User::findByUsername((string)$_SESSION['Username']);
+                } catch (\Throwable $e) {
+                    $this->layoutParams['currentUser'] = null;
+                }
+            }
+        }
+
         try {
             return View::renderView($view, array_merge($this->layoutParams, $params));
         } catch (Log $e) {

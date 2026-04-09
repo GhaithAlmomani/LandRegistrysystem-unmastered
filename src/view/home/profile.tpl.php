@@ -7,31 +7,6 @@ if (!isset($_SESSION['Username'])) {
     header('Location: login');
     exit();
 }
-
-// Connect to Database
-$dsn = 'mysql:host=127.0.0.1;dbname=wise';
-$user = 'root';
-$pass = '994422Gg';
-$option = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',);
-
-try {
-    $con = new PDO($dsn, $user, $pass, $option);
-    $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die('Connection failed: ' . $e->getMessage());
-}
-
-// Fetch user data
-$stmt = $con->prepare("SELECT * FROM user WHERE User_Name = ?");
-$stmt->execute([$_SESSION['Username']]);
-$userData = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$userData) {
-    // User not found, force logout
-    session_destroy();
-    header('Location: login');
-    exit();
-}
 ?>
 <section class="user-profile">
 
@@ -44,9 +19,7 @@ if (!$userData) {
             <h3 class="name"><?= htmlspecialchars($userData['User_FullName']) ?></h3>
             <p class="role">
                 <?php
-                    if ($userData['AdminID'] == 3) echo "Admin";
-                    elseif ($userData['AdminID'] == 2) echo "Employee";
-                    else echo "Individual";
+                    echo \MVC\middleware\AuthMiddleware::getRoleName($userData['AdminID']);
                 ?>
             </p>
             <a href="update-profile" class="inline-btn">update profile</a>

@@ -1,0 +1,21 @@
+Solidity layout uses Foundry + OpenZeppelin.
+
+1) Install Foundry: https://book.getfoundry.sh/getting-started/installation
+
+2) From the "contracts" folder:
+   forge install OpenZeppelin/openzeppelin-contracts --no-commit
+
+3) Build:
+   forge build
+
+Remappings: Foundry writes lib/openzeppelin-contracts. The remappings.txt in this folder matches @openzeppelin/contracts/ to that library.
+
+Deploy order (example):
+1. Deploy LandNFT(deployer)
+2. Deploy LandRegistry(deployer, address(LandNFT))
+3. LandNFT.setLandRegistry(address(LandRegistry))
+4. Deploy LandTransfer(deployer, address(LandRegistry), address(LandNFT))
+5. LandRegistry.setLandTransfer(address(LandTransfer))
+6. LandNFT.setLandTransfer(address(LandTransfer))
+7. LandRegistry.setEmployeeAuthorization(employee, true) [and same on LandTransfer for transfer employees]
+8. LandRegistry.approveProperty(id) after each registration (admin)

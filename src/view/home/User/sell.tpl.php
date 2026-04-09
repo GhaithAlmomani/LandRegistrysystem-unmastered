@@ -30,51 +30,24 @@
         </tr>
         </thead>
         <tbody>
-        <?php
-        // Fetch properties from database
-        $dsn = 'mysql:host=127.0.0.1;dbname=wise';
-        $user = 'root';
-        $pass = '994422Gg';
-        $option = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',);
-        
-        try {
-            $con = new PDO($dsn, $user, $pass, $option);
-            $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
-            // First get the user ID from the username
-            $stmt = $con->prepare("SELECT User_ID FROM user WHERE User_Name = ?");
-            $stmt->execute([$_SESSION['Username']]);
-            $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-            
-            if ($userData) {
-                // Get properties owned by the current user
-                $stmt = $con->prepare("SELECT * FROM properties WHERE owner_id = ?");
-                $stmt->execute([$userData['User_ID']]);
-                $properties = $stmt->fetchAll(PDO::FETCH_ASSOC);
-                
-                if (empty($properties)) {
-                    echo "<tr><td colspan='8' style='text-align: center;'>No properties found</td></tr>";
-                } else {
-                    foreach ($properties as $index => $property) {
-                        echo "<tr>";
-                        echo "<td>" . ($index + 1) . "</td>";
-                        echo "<td>" . htmlspecialchars($property['district_name']) . "</td>";
-                        echo "<td>" . htmlspecialchars($property['village']) . "</td>";
-                        echo "<td>" . htmlspecialchars($property['block_name']) . "</td>";
-                        echo "<td>" . htmlspecialchars($property['plot_number']) . "</td>";
-                        echo "<td>" . htmlspecialchars($property['block_number']) . "</td>";
-                        echo "<td>" . htmlspecialchars($property['apartment_number']) . "</td>";
-                        echo "<td><a href='sellReq?property_id=" . $property['id'] . "' class='sell-button'>Sell</a></td>";
-                        echo "</tr>";
-                    }
-                }
-            } else {
-                echo "<tr><td colspan='8' style='text-align: center; color: red;'>User not found</td></tr>";
-            }
-        } catch (PDOException $e) {
-            echo "<tr><td colspan='8' style='text-align: center; color: red;'>Error loading properties: " . htmlspecialchars($e->getMessage()) . "</td></tr>";
-        }
-        ?>
+        <?php if (!empty($error)): ?>
+            <tr><td colspan="8" style="text-align: center; color: red;"><?= htmlspecialchars($error) ?></td></tr>
+        <?php elseif (empty($properties)): ?>
+            <tr><td colspan="8" style="text-align: center;">No properties found</td></tr>
+        <?php else: ?>
+            <?php foreach ($properties as $index => $property): ?>
+                <tr>
+                    <td><?= $index + 1 ?></td>
+                    <td><?= htmlspecialchars($property['district_name'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($property['village'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($property['block_name'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($property['plot_number'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($property['block_number'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($property['apartment_number'] ?? '') ?></td>
+                    <td><a href="sellReq?property_id=<?= (int)($property['id'] ?? 0) ?>" class="sell-button">Sell</a></td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
         </tbody>
     </table>
 </section>

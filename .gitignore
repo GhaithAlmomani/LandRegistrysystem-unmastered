@@ -1,0 +1,12 @@
+# Environment secrets (never commit)
+.env
+
+# IDE
+.idea/
+
+# Dependencies
+vendor/
+
+# Storage
+storage/logs/
+storage/documents/

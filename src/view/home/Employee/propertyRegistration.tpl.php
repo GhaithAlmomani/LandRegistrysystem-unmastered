@@ -195,37 +195,38 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
     <!-- Alert Container -->
     <div id="alertContainer"></div>
 
-    <form id="registerForm">
+    <form id="registerForm" method="POST" action="/propertyRegistration">
+        <?= \MVC\core\CSRFToken::generateFormField() ?>
 
         <h1 class="heading">Property Registration</h1>
 
     <div class="mb-3">
         <label for="id" class="form-label">Property ID</label>
-        <input type="text" class="form-control" id="id" aria-describedby="idHelp" required>
+        <input type="text" class="form-control" id="id" name="id" aria-describedby="idHelp" required maxlength="64">
         <div id="idHelp" class="form-text">Enter the property ID</div>
     </div>
 
     <div class="mb-3">
         <label for="owner" class="form-label">Owner ID</label>
-        <input type="text" class="form-control" id="owner" aria-describedby="ownerHelp" required>
+        <input type="text" class="form-control" id="owner" name="owner" aria-describedby="ownerHelp" required maxlength="42" placeholder="0x...">
         <div id="ownerHelp" class="form-text">Enter the Owner address</div>
     </div>
 
     <div class="mb-3">
         <label for="description" class="form-label">Description</label>
-        <input type="text" class="form-control" id="description" aria-describedby="descriptionHelp" required>
+        <input type="text" class="form-control" id="description" name="description" aria-describedby="descriptionHelp" required maxlength="255">
         <div id="descriptionHelp" class="form-text">Enter a description for the property</div>
     </div>
 
     <div class="mb-3">
         <label for="latitude" class="form-label">latitude address</label>
-        <input type="text" class="form-control" id="latitude" aria-describedby="latitudeHelp" required>
+        <input type="text" class="form-control" id="latitude" name="latitude" aria-describedby="latitudeHelp" required>
         <div id="latitudeHelp" class="form-text">Enter the property latitude</div>
     </div>
 
     <div class="mb-3">
         <label for="longitude" class="form-label">longitude address</label>
-        <input type="text" class="form-control" id="longitude" aria-describedby="longitudeHelp" required>
+        <input type="text" class="form-control" id="longitude" name="longitude" aria-describedby="longitudeHelp" required>
         <div id="longitudeHelp" class="form-text">Enter the property longitude</div>
     </div>
 
@@ -271,11 +272,13 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
 
         // Register property function
         async function registerProperty() {
-            const id = document.getElementById('id').value;
-            const owner = document.getElementById('owner').value;
-            const description = document.getElementById('description').value;
-            const latitude = document.getElementById('latitude').value;
-            const longitude = document.getElementById('longitude').value;
+            const form = document.getElementById('registerForm');
+            const formData = new FormData(form);
+            const id = (formData.get('id') || '').toString();
+            const owner = (formData.get('owner') || '').toString();
+            const description = (formData.get('description') || '').toString();
+            const latitude = (formData.get('latitude') || '').toString();
+            const longitude = (formData.get('longitude') || '').toString();
 
             if (!id || !owner || !description || !latitude || !longitude) {
                 showAlert('Please fill in all fields', 'error');
@@ -283,6 +286,19 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
             }
 
             try {
+                // Server-side validation before blockchain call
+                const validateResp = await fetch('/propertyRegistration', {
+                    method: 'POST',
+                    body: formData,
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                const validateJson = await validateResp.json().catch(() => null);
+                if (!validateResp.ok) {
+                    const msg = validateJson?.errors ? Object.values(validateJson.errors).flat().join('\n') : 'Validation failed';
+                    showAlert(msg, 'error');
+                    return;
+                }
+
                 const accounts = await web3.eth.getAccounts();
                 
                 showAlert('Processing transaction...', 'info');

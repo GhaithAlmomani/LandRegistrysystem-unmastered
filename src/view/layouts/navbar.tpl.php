@@ -55,23 +55,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-
-$userData = null;
-if (isset($_SESSION['Username'])) {
-    $dsn = 'mysql:host=127.0.0.1;dbname=wise';
-    $user = 'root';
-    $pass = '994422Gg';
-    $option = array(PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8',);
-    try {
-        $con = new PDO($dsn, $user, $pass, $option);
-        $con->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        $stmt = $con->prepare("SELECT * FROM user WHERE User_Name = ?");
-        $stmt->execute([$_SESSION['Username']]);
-        $userData = $stmt->fetch(PDO::FETCH_ASSOC);
-    } catch (PDOException $e) {
-        $userData = null;
-    }
-}
+$userData = $currentUser ?? null;
 ?>
 
 <div class="side-bar">
@@ -86,9 +70,7 @@ if (isset($_SESSION['Username'])) {
             <h3 class="name"><?= htmlspecialchars($userData['User_Name']) ?></h3>
             <p class="role">
                 <?php
-                    if ($userData['AdminID'] == 3) echo "Admin";
-                    elseif ($userData['AdminID'] == 2) echo "Employee";
-                    else echo "individual";
+                    echo \MVC\middleware\AuthMiddleware::getRoleName($userData['AdminID']);
                 ?>
             </p>
             <a href="profile" class="btn">View Profile</a>
@@ -108,7 +90,7 @@ if (isset($_SESSION['Username'])) {
             <a href="about"><i class="fas fa-question"></i><span>About</span></a>
             <a href="learn-more"><i class="fas fa-chalkboard-user"></i><span>Learn More</span></a>
             <a href="contact"><i class="fas fa-headset"></i><span>Contact us</span></a>
-            <?php if (isset($userData) && $userData['AdminID'] == 3): ?>
+            <?php if (isset($userData) && $userData['AdminID'] == \MVC\middleware\AuthMiddleware::ROLE_ADMIN): ?>
                 <a href="search"><i class="fas fa-search"></i><span>User Search</span></a>
             <?php endif; ?>
         </div>

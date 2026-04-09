@@ -84,12 +84,12 @@
                                         $typeText = 'Individual';
                                         $badgeClass = 'bg-secondary';
                                         
-                                        if ($user['AdminID'] == 3) {
+                                        if ($user['AdminID'] == \MVC\middleware\AuthMiddleware::ROLE_ADMIN) {
                                             $typeClass = 'text-danger';
                                             $typeIcon = 'user-shield';
                                             $typeText = 'Admin';
                                             $badgeClass = 'bg-danger';
-                                        } elseif ($user['AdminID'] == 2) {
+                                        } elseif ($user['AdminID'] == \MVC\middleware\AuthMiddleware::ROLE_EMPLOYEE) {
                                             $typeClass = 'text-primary';
                                             $typeIcon = 'user-tie';
                                             $typeText = 'Employee';

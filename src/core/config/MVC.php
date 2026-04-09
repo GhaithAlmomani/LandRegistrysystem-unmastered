@@ -16,7 +16,7 @@ return [
     'encryption_key'    => bin2hex(random_bytes(32)),
     'bcrypt_algo'       => PASSWORD_BCRYPT,
     // Rate Limiting
-    'rate_limit_path'   => APP_PATH . '..' . DS . 'storage' . DS . 'rate_limits' . DS,
+    'rate_limit_path'   => APP_PATH . '..' . DS . 'storage' . DS . 'rate_limits',
     // Security
     'allowed_origins'   => ['https://yourdomain.com'],
     'cors_headers'      => true,

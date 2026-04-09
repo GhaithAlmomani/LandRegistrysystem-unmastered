@@ -214,26 +214,27 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
 <!-- Alert Container -->
 <div id="alertContainer"></div>
 
-<form id="transferOwnershipForm">
+<form id="transferOwnershipForm" method="POST" action="/propertyTransfer">
+    <?= \MVC\core\CSRFToken::generateFormField() ?>
 
     <h1 class="heading">Property Transfer</h1>
 
 
     <div class="mb-3">
         <label for="propertyId" class="form-label">Property ID</label>
-        <input type="text" class="form-control" id="propertyId" aria-describedby="propertyIdHelp" required>
+        <input type="text" class="form-control" id="propertyId" name="propertyId" aria-describedby="propertyIdHelp" required maxlength="64">
         <div id="propertyIdHelp" class="form-text">Enter The ID for the property</div>
     </div>
 
     <div class="mb-3">
         <label for="newOwner" class="form-label">New Owner Address</label>
-        <input type="text" class="form-control" id="newOwner" aria-describedby="newOwnerHelp" required>
+        <input type="text" class="form-control" id="newOwner" name="newOwner" aria-describedby="newOwnerHelp" required maxlength="42" placeholder="0x...">
         <div id="newOwnerdHelp" class="form-text">Enter The new owner ID</div>
     </div>
 
     <div class="mb-3">
         <label for="perviousOwner" class="form-label">Previous Owner Address</label>
-        <input type="text" class="form-control" id="previousOwner" aria-describedby="previousOwnerHelp" required>
+        <input type="text" class="form-control" id="previousOwner" name="previousOwner" aria-describedby="previousOwnerHelp" required maxlength="42" placeholder="0x...">
         <div id="previousOwnerdHelp" class="form-text">Enter The previous owner ID</div>
     </div>
 
@@ -299,9 +300,11 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
     document.getElementById('transferOwnershipForm').addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        const propertyId = document.getElementById('propertyId').value;
-        const newOwner = document.getElementById('newOwner').value;
-        const previousOwner = document.getElementById('previousOwner').value;
+        const form = document.getElementById('transferOwnershipForm');
+        const formData = new FormData(form);
+        const propertyId = (formData.get('propertyId') || '').toString();
+        const newOwner = (formData.get('newOwner') || '').toString();
+        const previousOwner = (formData.get('previousOwner') || '').toString();
 
         if (!propertyId || !newOwner || !previousOwner) {
             showAlert('Please fill in all fields', 'error');
@@ -309,6 +312,19 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
         }
 
         try {
+            // Server-side validation before blockchain call
+            const validateResp = await fetch('/propertyTransfer', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const validateJson = await validateResp.json().catch(() => null);
+            if (!validateResp.ok) {
+                const msg = validateJson?.errors ? Object.values(validateJson.errors).flat().join('\n') : 'Validation failed';
+                showAlert(msg, 'error');
+                return;
+            }
+
             showAlert('Processing transfer request...', 'info');
             const accounts = await web3.eth.getAccounts();
             

@@ -7,7 +7,7 @@ if (!isset($_SESSION['Username'])) {
     header('Location: /login');
     exit();
 }
-if (!isset($_SESSION['role']) || ($_SESSION['role'] != 2 && $_SESSION['role'] != 3)) {
+if (!isset($_SESSION['role']) || ($_SESSION['role'] != \MVC\middleware\AuthMiddleware::ROLE_EMPLOYEE && $_SESSION['role'] != \MVC\middleware\AuthMiddleware::ROLE_ADMIN)) {
     header('Location: /home');
     exit();
 }

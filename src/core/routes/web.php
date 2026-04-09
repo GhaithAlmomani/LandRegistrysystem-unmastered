@@ -1,6 +1,12 @@
 <?php
 
 use MVC\controller\HomeController;
+use MVC\controller\AuthController;
+use MVC\controller\AdminController;
+use MVC\controller\EmployeeController;
+use MVC\controller\PropertyController;
+use MVC\controller\TransferController;
+use MVC\controller\UserController;
 use MVC\controller\SearchController;
 use MVC\controller\LogoutController;
 use MVC\core\Router;
@@ -12,81 +18,88 @@ Router::group([], function (){
 
 Router::get('team', [HomeController::class, 'team']);
 
-Router::get('home', [HomeController::class, 'home']);
+Router::get('home', [UserController::class, 'home']);
 
-Router::get('login', [HomeController::class, 'login']);
-Router::post('login', [HomeController::class, 'login']);
+Router::get('login', [AuthController::class, 'login']);
+Router::post('login', [AuthController::class, 'login']);
 
 Router::get('contact', [HomeController::class, 'contact']);
+Router::post('contact', [HomeController::class, 'contact']);
 
 Router::get('connect', [HomeController::class, 'connect']);
 Router::post('connect', [HomeController::class, 'connect']);
 
-Router::get('employee', [HomeController::class, 'employee']);
+Router::get('employee', [EmployeeController::class, 'employee']);
 
-Router::get('ownedassets', [HomeController::class, 'ownedassets']);
+Router::get('ownedassets', [PropertyController::class, 'ownedassets']);
 
-Router::get('profile', [HomeController::class, 'profile']);
+Router::get('profile', [UserController::class, 'profile']);
 
-Router::get('register', [HomeController::class, 'register']);
-Router::post('register', [HomeController::class, 'register']);
+Router::get('register', [AuthController::class, 'register']);
+Router::post('register', [AuthController::class, 'register']);
 
 Router::get('interact', [HomeController::class, 'interact']);
 
 Router::get('learn-more', [HomeController::class, 'learnMore']);
 
-Router::get('adminAddress', [HomeController::class, 'adminAddress']);
+Router::get('adminAddress', [AdminController::class, 'adminAddress']);
+Router::post('adminAddress', [AdminController::class, 'adminAddress']);
 
-Router::get('update-profile', [HomeController::class, 'updateProfile']);
-Router::post('update-profile', [HomeController::class, 'updateProfile']);
+Router::get('update-profile', [UserController::class, 'updateProfile']);
+Router::post('update-profile', [UserController::class, 'updateProfile']);
 
 Router::get('watch-video', [HomeController::class, 'watchVideo']);
 
 Router::get('watch-video2', [HomeController::class, 'watchVideo2']);
 
-Router::get('propertyRegistration', [HomeController::class, 'propertyRegistration']);
+Router::get('propertyRegistration', [EmployeeController::class, 'propertyRegistration']);
+Router::post('propertyRegistration', [EmployeeController::class, 'propertyRegistration']);
 
-Router::get('propertyTransfer', [HomeController::class, 'propertyTransfer']);
+Router::get('propertyTransfer', [EmployeeController::class, 'propertyTransfer']);
+Router::post('propertyTransfer', [EmployeeController::class, 'propertyTransfer']);
 
-Router::get('setEmpAuth', [HomeController::class, 'setEmpAuth']);
+Router::get('setEmpAuth', [AdminController::class, 'setEmpAuth']);
+Router::post('setEmpAuth', [AdminController::class, 'setEmpAuth']);
 
-Router::get('qrScan', [HomeController::class, 'qrScan']);
+Router::get('qrScan', [UserController::class, 'qrScan']);
 
-// Search Routes
+// Search Routes (GET: URL params; POST: header search form uses search_box)
 Router::get('search', [SearchController::class, 'index']);
+Router::post('search', [SearchController::class, 'index']);
 
-Router::get('testEmp', [HomeController::class, 'testEmp']);
+Router::get('testEmp', [EmployeeController::class, 'testEmp']);
 
-Router::get('checkEmpAuth', [HomeController::class, 'checkEmpAuth']);
+Router::get('checkEmpAuth', [AdminController::class, 'checkEmpAuth']);
 
-Router::get('allProperties', [HomeController::class, 'allProperties']);
+Router::get('allProperties', [PropertyController::class, 'allProperties']);
 
-Router::get('PropertyById', [HomeController::class, 'PropertyById']);
+Router::get('PropertyById', [PropertyController::class, 'PropertyById']);
 
-Router::get('PropertyCount', [HomeController::class, 'PropertyCount']);
+Router::get('PropertyCount', [PropertyController::class, 'PropertyCount']);
 
-Router::get('PropertyInfo', [HomeController::class, 'PropertyInfo']);
+Router::get('PropertyInfo', [PropertyController::class, 'PropertyInfo']);
 
-Router::get('sell', [HomeController::class, 'sell']);
+Router::get('sell', [PropertyController::class, 'sell']);
 
-Router::get('sellReq', [HomeController::class, 'sellReq']);
-Router::post('sellReq', [HomeController::class, 'sellReq']);
+Router::get('sellReq', [TransferController::class, 'sellReq']);
+Router::post('sellReq', [TransferController::class, 'sellReq']);
 
-Router::get('sellRequest', [HomeController::class, 'sellRequest']);
-Router::post('sellRequest', [HomeController::class, 'sellRequest']);
+Router::get('sellRequest', [TransferController::class, 'sellRequest']);
+Router::post('sellRequest', [TransferController::class, 'sellRequest']);
+Router::get('downloadDocument', [TransferController::class, 'downloadDocument']);
+Router::post('downloadDocument', [TransferController::class, 'downloadDocument']);
 
-Router::get('recentTransaction', [HomeController::class, 'recentTransaction']);
+Router::get('recentTransaction', [UserController::class, 'recentTransaction']);
 
-Router::get('employeePortal', [HomeController::class, 'employeePortal']);
+Router::get('employeePortal', [EmployeeController::class, 'employeePortal']);
 
-Router::get('adminPortal', [HomeController::class, 'adminPortal']);
+Router::get('adminPortal', [AdminController::class, 'adminPortal']);
 
-Router::get('orders', [HomeController::class, 'orders']);
+Router::get('orders', [UserController::class, 'orders']);
 
 // Logout Route
 Router::get('logout', [LogoutController::class, 'index']);
 
-Router::get('dashboard', [HomeController::class, 'dashboard']);
-
-Router::post('dashboard', [HomeController::class, 'dashboard']);
+Router::get('dashboard', [UserController::class, 'dashboard']);
+Router::post('dashboard', [UserController::class, 'dashboard']);
 
