@@ -10,3 +10,5 @@ vendor/
 # Storage
 storage/logs/
 storage/documents/
+storage/log/
+storage/session/
