@@ -48,9 +48,27 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (1,1,'Admin','FullName','40bd001563085fc35165329ea1ff5c5ecbdbbeef','wise@wise.edu.jo','style/photo/users/wise.png','2025-01-03 01:09:11',0,'2022-08-18',3,0),(2,2,'employee',NULL,'40bd001563085fc35165329ea1ff5c5ecbdbbeef','wise@wise.edu.jo','style/photo/users/wise.png','2025-01-05 12:00:50',0,NULL,2,0),(3,3,'user','Fullname','40bd001563085fc35165329ea1ff5c5ecbdbbeef','wise@wise.edu.jo','style/photo/users/wise.png','2025-01-05 12:05:41',0,NULL,1,0);
+INSERT INTO `user` VALUES (1,1,'Admin','FullName','$argon2id$v=19$m=65536,t=4,p=1$ekFrRFBtYW83NUx5SmF0dg$+TPOYJAF7daka6ZTCg0iwGPHoGO98gjn5HvM/NTCDds','wise@wise.edu.jo','style/photo/users/wise.png','2025-01-03 01:09:11',0,'2022-08-18',3,0),(2,2,'employee',NULL,'$argon2id$v=19$m=65536,t=4,p=1$ekFrRFBtYW83NUx5SmF0dg$+TPOYJAF7daka6ZTCg0iwGPHoGO98gjn5HvM/NTCDds','wise@wise.edu.jo','style/photo/users/wise.png','2025-01-05 12:00:50',0,NULL,2,0),(3,3,'user','Fullname','$argon2id$v=19$m=65536,t=4,p=1$ekFrRFBtYW83NUx5SmF0dg$+TPOYJAF7daka6ZTCg0iwGPHoGO98gjn5HvM/NTCDds','wise@wise.edu.jo','style/photo/users/wise.png','2025-01-05 12:05:41',0,NULL,1,0);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Table structure for table `login_attempts`
+--
+
+DROP TABLE IF EXISTS `login_attempts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `login_attempts` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `ip_address` varchar(45) NOT NULL,
+  `username` varchar(255) NOT NULL,
+  `attempted_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_login_attempts_ip_time` (`ip_address`,`attempted_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

@@ -4,10 +4,16 @@ namespace MVC\controller;
 
 use MVC\core\CSRFToken;
 use MVC\middleware\AuthMiddleware;
+use MVC\model\LoginAttempt;
 use MVC\model\User;
 
 class AuthController extends Controller
 {
+    private static function clientIp(): string
+    {
+        return $_SERVER['REMOTE_ADDR'] ?? '';
+    }
+
     public function login(): bool|array|string
     {
         if (isset($_SESSION['Username'])) {
@@ -31,16 +37,25 @@ class AuthController extends Controller
                 return $this->render('home.login', ['error' => $error]);
             }
 
+            $ip = self::clientIp();
+            $ip_attempt_window_minutes = 10;
+            if (LoginAttempt::countRecentByIp($ip, $ip_attempt_window_minutes) > 20) {
+                sleep(random_int(2, 4));
+                $error = 'Too many login attempts from this location. Please try again later.';
+                return $this->render('home.login', ['error' => $error]);
+            }
+
             $user = User::findByUsername($username);
             if (!$user) {
                 // Avoid user enumeration; behave like wrong password.
                 sleep(random_int(2, 4));
+                LoginAttempt::record($ip, $username);
                 $error = 'Invalid username or password.';
                 return $this->render('home.login', ['error' => $error]);
             }
 
-            $total_failed_login = 30;
-            $lockout_time_minutes = 1;
+            $total_failed_login = 5;
+            $lockout_time_minutes = 30;
 
             $account_locked = false;
             if (!empty($user['failed_login']) && (int)$user['failed_login'] >= $total_failed_login) {
@@ -51,8 +66,7 @@ class AuthController extends Controller
                 }
             }
 
-            $hashed = hash('sha256', $password);
-            if (!$account_locked && hash_equals((string)$user['User_Password'], $hashed)) {
+            if (!$account_locked && password_verify($password, (string)$user['User_Password'])) {
                 User::updateFailedLogin($username, 0);
                 User::updateLastLogin($username);
 
@@ -71,6 +85,7 @@ class AuthController extends Controller
 
             // Login failed
             sleep(random_int(2, 4));
+            LoginAttempt::record($ip, $username);
             User::incrementFailedLogin($username);
             User::updateLastLogin($username);
             error_log("Failed login attempt for user: $username from IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'unknown'));
@@ -121,7 +136,7 @@ class AuthController extends Controller
                 $error_message = 'National ID already registered!';
             } else {
                 $next_user_number = User::nextUserNumber();
-                $hashed_password = hash('sha256', $pass);
+                $hashed_password = password_hash($pass, PASSWORD_ARGON2ID);
 
                 $con = \Database::getConnection();
                 $stmt = $con->prepare('INSERT INTO user (

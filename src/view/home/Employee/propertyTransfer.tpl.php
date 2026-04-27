@@ -359,7 +359,6 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
     document.getElementById('registerPropertyForm')?.addEventListener('submit', async (event) => {
         event.preventDefault();
 
-        const propertyId = document.getElementById('propertyId').value;
         const owner = document.getElementById('owner').value;
         const description = document.getElementById('description').value;
         const latitude = document.getElementById('latitude').value;
@@ -368,7 +367,6 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
         try {
             const accounts = await web3.eth.getAccounts();
             await contract.methods.registerProperty(
-                propertyId,
                 owner,
                 description,
                 latitude,

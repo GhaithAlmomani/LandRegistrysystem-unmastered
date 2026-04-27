@@ -3486,3 +3486,213 @@ Stack Trace:
 #1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
 #2 {main}
 ----------------------------------------
+[2026-04-10 02:04:39] Page Not Found
+IP: ::1
+Request: GET /.well-known/appspecific/com.chrome.devtools.json
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+Referer: No Referer
+Session ID: 5pvda7jm3ve9f51j8a9l7tbqj1
+User: GhaithAlmomani (Role: 3)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-11 21:28:56] Page Not Found
+IP: ::1
+Request: GET /style/photo/users/wise.png
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+Referer: http://localhost/home
+Session ID: f32hpmrdvu4qnslmcoqa7h0iug
+User: Employee (Role: 2)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-11 21:28:56] Page Not Found
+IP: ::1
+Request: GET /style/photo/users/wise.png
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+Referer: http://localhost/home
+Session ID: f32hpmrdvu4qnslmcoqa7h0iug
+User: Employee (Role: 2)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-11 21:29:20] Page Not Found
+IP: ::1
+Request: GET /style/photo/users/wise.png
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+Referer: http://localhost/propertyRegistration
+Session ID: f32hpmrdvu4qnslmcoqa7h0iug
+User: Employee (Role: 2)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-11 21:29:20] Page Not Found
+IP: ::1
+Request: GET /style/photo/users/wise.png
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36
+Referer: http://localhost/propertyRegistration
+Session ID: f32hpmrdvu4qnslmcoqa7h0iug
+User: Employee (Role: 2)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-27 14:46:52] Page Not Found
+IP: ::1
+Request: GET /.well-known/appspecific/com.chrome.devtools.json
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Referer: No Referer
+Session ID: 95jrhlo3da6sgud6elba0rvdtm
+User: Employee (Role: 2)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-27 14:48:52] Page Not Found
+IP: ::1
+Request: GET /.well-known/appspecific/com.chrome.devtools.json
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Referer: No Referer
+Session ID: 95jrhlo3da6sgud6elba0rvdtm
+User: Employee (Role: 2)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-27 15:05:47] Page Not Found
+IP: ::1
+Request: GET /api/fingerprint/enroll
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Referer: No Referer
+Session ID: 
+User: Not Logged In (Role: No Role)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 104
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-27 19:17:10] Page Not Found
+IP: ::1
+Request: GET /.well-known/appspecific/com.chrome.devtools.json
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Referer: No Referer
+Session ID: 95jrhlo3da6sgud6elba0rvdtm
+User: GhaithAlmomani (Role: 3)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-27 20:17:36] Page Not Found
+IP: ::1
+Request: GET /.well-known/appspecific/com.chrome.devtools.json
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Referer: No Referer
+Session ID: 95jrhlo3da6sgud6elba0rvdtm
+User: GhaithAlmomani (Role: 3)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-27 20:23:56] Page Not Found
+IP: ::1
+Request: GET /.well-known/appspecific/com.chrome.devtools.json
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Referer: No Referer
+Session ID: 95jrhlo3da6sgud6elba0rvdtm
+User: GhaithAlmomani (Role: 3)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-27 20:24:03] Page Not Found
+IP: ::1
+Request: GET /.well-known/appspecific/com.chrome.devtools.json
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Referer: No Referer
+Session ID: 95jrhlo3da6sgud6elba0rvdtm
+User: GhaithAlmomani (Role: 3)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-27 20:24:06] Page Not Found
+IP: ::1
+Request: GET /.well-known/appspecific/com.chrome.devtools.json
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Referer: No Referer
+Session ID: 95jrhlo3da6sgud6elba0rvdtm
+User: GhaithAlmomani (Role: 3)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------
+[2026-04-27 20:24:29] Page Not Found
+IP: ::1
+Request: GET /.well-known/appspecific/com.chrome.devtools.json
+User Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36
+Referer: No Referer
+Session ID: 95jrhlo3da6sgud6elba0rvdtm
+User: GhaithAlmomani (Role: 3)
+Error: Page Not Found
+File: C:\Apache24\htdocs\LandRegistrysystem\src\core\Router.php
+Line: 103
+Stack Trace:
+#0 C:\Apache24\htdocs\LandRegistrysystem\src\core\App.php(21): MVC\core\Router->dispatch()
+#1 C:\Apache24\htdocs\LandRegistrysystem\public\index.php(11): MVC\core\App->run()
+#2 {main}
+----------------------------------------

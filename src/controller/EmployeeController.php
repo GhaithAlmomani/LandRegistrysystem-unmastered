@@ -108,9 +108,6 @@ class EmployeeController extends Controller
 
             $errors = [];
 
-            [$id, $e] = $this->postString('id', 64, true);
-            if ($e) $errors['id'][] = $e;
-
             [$owner, $e] = $this->postWalletAddress('owner', true);
             if ($e) $errors['owner'][] = $e;
 
