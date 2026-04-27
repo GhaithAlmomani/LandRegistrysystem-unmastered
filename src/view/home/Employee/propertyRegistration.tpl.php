@@ -201,9 +201,7 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
         <h1 class="heading">Property Registration</h1>
 
     <div class="mb-3">
-        <label for="id" class="form-label">Property ID</label>
-        <input type="text" class="form-control" id="id" name="id" aria-describedby="idHelp" required maxlength="64">
-        <div id="idHelp" class="form-text">Enter the property ID</div>
+        <p class="form-text" style="margin-bottom: 1.5rem;">Property IDs are assigned automatically on the blockchain when registration succeeds.</p>
     </div>
 
     <div class="mb-3">
@@ -274,13 +272,12 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
         async function registerProperty() {
             const form = document.getElementById('registerForm');
             const formData = new FormData(form);
-            const id = (formData.get('id') || '').toString();
             const owner = (formData.get('owner') || '').toString();
             const description = (formData.get('description') || '').toString();
             const latitude = (formData.get('latitude') || '').toString();
             const longitude = (formData.get('longitude') || '').toString();
 
-            if (!id || !owner || !description || !latitude || !longitude) {
+            if (!owner || !description || !latitude || !longitude) {
                 showAlert('Please fill in all fields', 'error');
                 return;
             }
@@ -303,7 +300,7 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
                 
                 showAlert('Processing transaction...', 'info');
 
-                contract.methods.registerProperty(id, owner, description, latitude, longitude)
+                contract.methods.registerProperty(owner, description, latitude, longitude)
                 .send({ from: accounts[0] })
                 .on('transactionHash', function(hash) {
                     showAlert(`Transaction sent! Hash: ${hash.substring(0, 10)}...`, 'info');

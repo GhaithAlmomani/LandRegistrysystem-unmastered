@@ -12,7 +12,9 @@ contract PropertyRegistry {
     }
 
     // State variables
-    Property[] private properties; // List of properties
+    mapping(uint256 => Property) public properties;
+    uint256 private _propertyCounter;
+    mapping(uint256 => bool) private _propertyExists;
     mapping(address => bool) public authorizedEmployees; // Employee authorization mapping
     address public admin; // Admin address
 
@@ -63,15 +65,17 @@ contract PropertyRegistry {
 
     // Function to register a property (authorized employees only)
     function registerProperty(
-        uint256 _id,
         address _owner,
         string memory _description,
         string memory _latitude,
         string memory _longitude
     ) public onlyAuthorizedEmployee {
-        properties.push(Property(_id, _owner, _description, _latitude, _longitude));
+        _propertyCounter++;
+        uint256 id = _propertyCounter;
+        properties[id] = Property(id, _owner, _description, _latitude, _longitude);
+        _propertyExists[id] = true;
         emit PropertyRegistered(
-            _id,
+            id,
             _owner,
             _description,
             _latitude,
@@ -86,7 +90,7 @@ contract PropertyRegistry {
         address _previoustOwner,
         address _newOwner
     ) public onlyAuthorizedEmployee {
-        require(_id < properties.length, "Property does not exist");
+        require(_propertyExists[_id], "Property does not exist");
 
         Property storage property = properties[_id];
         address previousOwner = property.owner;
@@ -102,14 +106,29 @@ contract PropertyRegistry {
 
     // Get all properties
     function getAllProperties() public view returns (Property[] memory) {
-        return properties;
+        uint256 count = 0;
+        for (uint256 i = 1; i <= _propertyCounter; i++) {
+            if (_propertyExists[i]) {
+                count++;
+            }
+        }
+
+        Property[] memory result = new Property[](count);
+        uint256 j = 0;
+        for (uint256 i = 1; i <= _propertyCounter; i++) {
+            if (_propertyExists[i]) {
+                result[j] = properties[i];
+                j++;
+            }
+        }
+        return result;
     }
 
     // Get a property by ID
     function getPropertyById(
         uint256 _id
     ) public view returns (uint256, address, string memory, string memory, string memory) {
-        require(_id < properties.length, "Property does not exist");
+        require(_propertyExists[_id], "Property does not exist");
 
         Property memory property = properties[_id];
         return (
@@ -123,7 +142,13 @@ contract PropertyRegistry {
 
     // Get the total count of properties
     function getPropertyCount() public view returns (uint256) {
-        return properties.length;
+        uint256 count = 0;
+        for (uint256 i = 1; i <= _propertyCounter; i++) {
+            if (_propertyExists[i]) {
+                count++;
+            }
+        }
+        return count;
     }
 
     // Get full information of a property by ID
@@ -141,7 +166,7 @@ contract PropertyRegistry {
             bool isAuthorizedForTransfer
         )
     {
-        require(_id < properties.length, "Property does not exist");
+        require(_propertyExists[_id], "Property does not exist");
 
         Property memory property = properties[_id];
         return (

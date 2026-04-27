@@ -101,11 +101,6 @@ const contractABI = [
         {
             "inputs": [
                 {
-                    "internalType": "uint256",
-                    "name": "_id",
-                    "type": "uint256"
-                },
-                {
                     "internalType": "address",
                     "name": "_owner",
                     "type": "address"
@@ -129,6 +124,45 @@ const contractABI = [
             "name": "registerProperty",
             "outputs": [],
             "stateMutability": "nonpayable",
+            "type": "function"
+        },
+        {
+            "inputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "",
+                    "type": "uint256"
+                }
+            ],
+            "name": "properties",
+            "outputs": [
+                {
+                    "internalType": "uint256",
+                    "name": "id",
+                    "type": "uint256"
+                },
+                {
+                    "internalType": "address",
+                    "name": "owner",
+                    "type": "address"
+                },
+                {
+                    "internalType": "string",
+                    "name": "description",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "latitude",
+                    "type": "string"
+                },
+                {
+                    "internalType": "string",
+                    "name": "longitude",
+                    "type": "string"
+                }
+            ],
+            "stateMutability": "view",
             "type": "function"
         },
         {

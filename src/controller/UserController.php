@@ -73,14 +73,14 @@ class UserController extends Controller
                 ];
 
                 if ($old_pass !== '' || $new_pass !== '' || $c_pass !== '') {
-                    if (hash('sha256', $old_pass) !== (string)$userData['User_Password']) {
+                    if (!password_verify($old_pass, (string)$userData['User_Password'])) {
                         $error_message = "Old password is incorrect.";
                     } elseif ($new_pass !== $c_pass) {
                         $error_message = "New passwords do not match.";
                     } elseif (strlen($new_pass) < 8) {
                         $error_message = "New password must be at least 8 characters.";
                     } else {
-                        $update['User_Password'] = hash('sha256', $new_pass);
+                        $update['User_Password'] = password_hash($new_pass, PASSWORD_ARGON2ID);
                     }
                 }
 
