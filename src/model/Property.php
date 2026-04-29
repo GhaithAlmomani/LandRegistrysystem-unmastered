@@ -8,6 +8,10 @@ use PDO;
 
 class Property
 {
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_PENDING_TRANSFER = 'pending_transfer';
+    public const STATUS_TRANSFERRED = 'transferred';
+
     public static function findByOwner(int $ownerId): array
     {
         $con = \Database::getConnection();
@@ -20,7 +24,8 @@ class Property
                 p.block_name,
                 p.plot_number,
                 p.block_number,
-                p.apartment_number,
+                p.`type`,
+                p.area,
                 p.status,
                 p.created_at
             FROM properties p
@@ -57,13 +62,30 @@ class Property
         return (int)$stmt->fetchColumn();
     }
 
+    public static function countByStatus(string $status): int
+    {
+        $allowed = [
+            self::STATUS_ACTIVE,
+            self::STATUS_PENDING_TRANSFER,
+            self::STATUS_TRANSFERRED
+        ];
+        if (!in_array($status, $allowed, true)) {
+            return 0;
+        }
+
+        $con = \Database::getConnection();
+        $stmt = $con->prepare("SELECT COUNT(*) FROM properties WHERE status = ?");
+        $stmt->execute([$status]);
+        return (int)$stmt->fetchColumn();
+    }
+
     public static function create(array $data): int
     {
         $con = \Database::getConnection();
         $stmt = $con->prepare("
             INSERT INTO properties (
-                owner_id, district_name, village, block_name, plot_number, block_number, apartment_number, status, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                owner_id, district_name, village, block_name, plot_number, block_number, `type`, area, status, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $stmt->execute([
             $data['owner_id'] ?? null,
@@ -72,7 +94,8 @@ class Property
             $data['block_name'] ?? null,
             $data['plot_number'] ?? null,
             $data['block_number'] ?? null,
-            $data['apartment_number'] ?? null,
+            $data['type'] ?? 'land',
+            $data['area'] ?? null,
             $data['status'] ?? 'active',
             $data['created_at'] ?? date('Y-m-d H:i:s'),
         ]);
@@ -122,6 +145,55 @@ class Property
         }
 
         $sql .= " ORDER BY created_at DESC";
+
+        $stmt = $con->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    public static function searchSystemRecords(?string $q, int $limit = 50): array
+    {
+        $limit = max(1, min(200, (int)$limit));
+        $con = \Database::getConnection();
+
+        $sql = "
+            SELECT
+                p.*,
+                u.User_Name as owner_name,
+                u.User_NationalID as owner_national_id
+            FROM properties p
+            JOIN user u ON p.owner_id = u.User_ID
+            WHERE 1=1
+        ";
+        $params = [];
+
+        if ($q !== null && trim($q) !== '') {
+            $term = '%' . trim($q) . '%';
+            $sql .= " AND (
+                p.id = ?
+                OR p.district_name LIKE ?
+                OR p.village LIKE ?
+                OR p.block_name LIKE ?
+                OR p.plot_number LIKE ?
+                OR p.block_number LIKE ?
+                OR p.`type` LIKE ?
+                OR CAST(p.area AS CHAR) LIKE ?
+                OR u.User_Name LIKE ?
+                OR u.User_NationalID LIKE ?
+            )";
+            $params[] = is_numeric($q) ? (int)$q : -1;
+            $params[] = $term;
+            $params[] = $term;
+            $params[] = $term;
+            $params[] = $term;
+            $params[] = $term;
+            $params[] = $term;
+            $params[] = $term;
+            $params[] = $term;
+            $params[] = $term;
+        }
+
+        $sql .= " ORDER BY p.created_at DESC LIMIT {$limit}";
 
         $stmt = $con->prepare($sql);
         $stmt->execute($params);

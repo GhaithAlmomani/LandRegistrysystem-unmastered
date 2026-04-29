@@ -156,8 +156,10 @@ class DocumentGenerator extends \TCPDF {
         $this->Cell(0, 10, $propertyDetails['plot_number'], 0, 1);
         $this->Cell(60, 10, 'Block Number:', 0, 0);
         $this->Cell(0, 10, $propertyDetails['block_number'], 0, 1);
-        $this->Cell(60, 10, 'Apartment Number:', 0, 0);
-        $this->Cell(0, 10, $propertyDetails['apartment_number'], 0, 1);
+        $this->Cell(60, 10, 'Type:', 0, 0);
+        $this->Cell(0, 10, ucfirst((string)($propertyDetails['type'] ?? 'land')), 0, 1);
+        $this->Cell(60, 10, 'Area:', 0, 0);
+        $this->Cell(0, 10, !empty($propertyDetails['area']) ? ((string)$propertyDetails['area'] . ' m²') : '—', 0, 1);
         $this->Ln(10);
         
         // Seller Information
@@ -184,6 +186,10 @@ class DocumentGenerator extends \TCPDF {
         $this->Cell(0, 10, $buyerDetails['buyer_national_id'], 0, 1);
         $this->Cell(60, 10, 'Phone:', 0, 0);
         $this->Cell(0, 10, $buyerDetails['buyer_phone'], 0, 1);
+        if (!empty($buyerDetails['buyer_email'])) {
+            $this->Cell(60, 10, 'Email:', 0, 0);
+            $this->Cell(0, 10, $buyerDetails['buyer_email'], 0, 1);
+        }
         $this->Cell(60, 10, 'Address:', 0, 0);
         $this->Cell(0, 10, $buyerDetails['buyer_address'], 0, 1);
         $this->Ln(10);
@@ -213,5 +219,81 @@ class DocumentGenerator extends \TCPDF {
         ]);
         
         $this->write2DBarcode($qrData, 'QRCODE,H', 80, $this->GetY(), 50, 50);
+    }
+
+    public function generateTransferRequestSlip(array $transferDetails, array $propertyDetails, array $sellerDetails, array $buyerDetails): void
+    {
+        $this->SetTitle('Transfer Request Slip');
+        $this->AddPage();
+
+        $this->SetFont('helvetica', 'B', 16);
+        $this->Cell(0, 10, 'DLS Transfer Request Slip', 0, 1, 'C');
+        $this->Ln(4);
+
+        $this->SetFont('helvetica', '', 11);
+        $this->MultiCell(0, 7, 'Department of Land & Survey (Jordan) - Initial filing receipt. Keep this slip and present the tracking number during in-person verification.', 0, 'L');
+        $this->Ln(3);
+
+        $this->SetFont('helvetica', 'B', 13);
+        $this->Cell(0, 8, 'Tracking', 0, 1, 'L');
+        $this->SetFont('helvetica', '', 12);
+        $this->Cell(55, 8, 'Tracking Number:', 0, 0);
+        $this->SetFont('helvetica', 'B', 12);
+        $this->Cell(0, 8, (string)($transferDetails['tracking_number'] ?? ''), 0, 1);
+        $this->SetFont('helvetica', '', 11);
+        $this->Cell(55, 8, 'Filed At:', 0, 0);
+        $this->Cell(0, 8, (string)($transferDetails['created_at'] ?? ''), 0, 1);
+        $this->Ln(2);
+
+        $this->SetFont('helvetica', 'B', 12);
+        $this->Cell(0, 8, 'Property Information', 0, 1, 'L');
+        $this->SetFont('helvetica', '', 11);
+        $this->Cell(55, 7, 'District:', 0, 0); $this->Cell(0, 7, (string)($propertyDetails['district_name'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'Village:', 0, 0); $this->Cell(0, 7, (string)($propertyDetails['village'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'Block:', 0, 0); $this->Cell(0, 7, (string)($propertyDetails['block_name'] ?? '') . ' / ' . (string)($propertyDetails['block_number'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'Plot:', 0, 0); $this->Cell(0, 7, (string)($propertyDetails['plot_number'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'Type:', 0, 0); $this->Cell(0, 7, ucfirst((string)($propertyDetails['type'] ?? 'land')), 0, 1);
+        $this->Cell(55, 7, 'Area:', 0, 0); $this->Cell(0, 7, !empty($propertyDetails['area']) ? ((string)$propertyDetails['area'] . ' m²') : '—', 0, 1);
+        $this->Ln(2);
+
+        $this->SetFont('helvetica', 'B', 12);
+        $this->Cell(0, 8, 'Seller Declaration (Filed By)', 0, 1, 'L');
+        $this->SetFont('helvetica', '', 11);
+        $this->Cell(55, 7, 'Name:', 0, 0); $this->Cell(0, 7, (string)($sellerDetails['name'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'National ID:', 0, 0); $this->Cell(0, 7, (string)($sellerDetails['national_id'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'Email:', 0, 0); $this->Cell(0, 7, (string)($sellerDetails['email'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'Phone:', 0, 0); $this->Cell(0, 7, (string)($sellerDetails['phone'] ?? ''), 0, 1);
+        $this->Ln(2);
+
+        $this->SetFont('helvetica', 'B', 12);
+        $this->Cell(0, 8, 'Buyer Declaration', 0, 1, 'L');
+        $this->SetFont('helvetica', '', 11);
+        $this->Cell(55, 7, 'Name:', 0, 0); $this->Cell(0, 7, (string)($buyerDetails['buyer_name'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'National ID:', 0, 0); $this->Cell(0, 7, (string)($buyerDetails['buyer_national_id'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'Email:', 0, 0); $this->Cell(0, 7, (string)($buyerDetails['buyer_email'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'Phone:', 0, 0); $this->Cell(0, 7, (string)($buyerDetails['buyer_phone'] ?? ''), 0, 1);
+        $this->Cell(55, 7, 'Address:', 0, 0); $this->MultiCell(0, 7, (string)($buyerDetails['buyer_address'] ?? ''), 0, 'L');
+        $this->Ln(2);
+
+        $this->SetFont('helvetica', 'B', 12);
+        $this->Cell(0, 8, 'Instructions to Complete Procedure', 0, 1, 'L');
+        $this->SetFont('helvetica', '', 11);
+        $instructions = [
+            '1) Seller and buyer must attend a Department of Land & Survey (DLS) office in person.',
+            '2) Present this slip and the tracking number to the notary officer.',
+            '3) Notary officer checks the request in the system and verifies both identities.',
+            '4) Upon successful verification, the notary proceeds with approval workflow.'
+        ];
+        foreach ($instructions as $line) {
+            $this->MultiCell(0, 7, $line, 0, 'L');
+        }
+        $this->Ln(3);
+
+        $qrData = json_encode([
+            'tracking_number' => (string)($transferDetails['tracking_number'] ?? ''),
+            'type' => 'dls_transfer_request_slip',
+            'issued_at' => (string)($transferDetails['created_at'] ?? '')
+        ]);
+        $this->write2DBarcode($qrData, 'QRCODE,H', 155, $this->GetY(), 35, 35);
     }
 } 

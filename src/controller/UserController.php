@@ -5,6 +5,7 @@ namespace MVC\controller;
 use MVC\core\CSRFToken;
 use MVC\middleware\AuthMiddleware;
 use MVC\model\User;
+use MVC\model\Property;
 use MVC\model\PropertyTransfer;
 use Exception;
 
@@ -33,7 +34,29 @@ class UserController extends Controller
         }
 
         $userData = User::findByUsername($_SESSION['Username']);
-        return $this->render('home.profile', ['userData' => $userData]);
+        $assetsOwned = 0;
+        $ordersCount = 0;
+
+        if ($userData) {
+            try {
+                $owned = Property::findByOwner((int)$userData['User_ID']);
+                $assetsOwned = is_array($owned) ? count($owned) : 0;
+            } catch (Exception) {
+                $assetsOwned = 0;
+            }
+
+            try {
+                $ordersCount = PropertyTransfer::countForUser((int)$userData['User_ID'], (string)($userData['User_NationalID'] ?? ''));
+            } catch (Exception) {
+                $ordersCount = 0;
+            }
+        }
+
+        return $this->render('home.profile', [
+            'userData' => $userData,
+            'assetsOwned' => $assetsOwned,
+            'ordersCount' => $ordersCount,
+        ]);
     }
 
     public function updateProfile(): bool|array|string
@@ -166,21 +189,8 @@ class UserController extends Controller
 
     public function orders(): bool|array|string
     {
-        AuthMiddleware::requireUser();
-
-        try {
-            $userData = User::findByUsername($_SESSION['Username']);
-
-            if (!$userData) {
-                throw new Exception("User not found");
-            }
-
-            $orders = PropertyTransfer::findOrdersForUser((int)$userData['User_ID'], (string)$userData['User_NationalID']);
-
-            return $this->render('home.User.Orders', ['orders' => $orders]);
-        } catch (Exception $e) {
-            return $this->render('home.User.Orders', ['error' => $e->getMessage()]);
-        }
+        header('Location: /myRequests');
+        exit;
     }
 
     public function qrScan(): bool|array|string

@@ -106,7 +106,6 @@
                                                         <img src="<?= htmlspecialchars($user['User_Avatar'] ?? 'https://ui-avatars.com/api/?name=' . urlencode($user['User_Name']) . '&background=0056b3&color=fff' ) ?>" 
                                                              alt="<?= htmlspecialchars($user['User_Name']) ?>" 
                                                              class="rounded-circle"
-                                                             style="width: 40px; height: 40px; object-fit: cover;"
                                                              onerror="this.src='https://ui-avatars.com/api/?name=<?= urlencode($user['User_Name']) ?>&background=0056b3&color=fff'">
                                                         <span class="position-absolute bottom-0 end-0 p-1 bg-<?= $isOnline ? 'success' : 'secondary' ?> border border-2 border-white rounded-circle"></span>
                                                     </div>
@@ -182,15 +181,14 @@
                             <i class="fas fa-search fa-3x text-primary"></i>
                         </div>
                     </div>
-                    <div class="position-relative" style="z-index: 1;">
+                    <div class="position-relative">
                         <img src="https://cdn.pixabay.com/photo/2018/08/14/13/23/ocean-3605547_1280.jpg" 
                              class="img-fluid rounded-4 shadow-sm" 
-                             style="max-width: 300px; opacity: 0.9;"
                              alt="Search illustration">
                     </div>
                 </div>
                 <h2 class="fw-semibold mb-3">Employee Management</h2>
-                <p class="lead text-muted mb-4 px-3 px-md-5 mx-auto" style="max-width: 600px;">
+                <p class="lead text-muted mb-4 px-3 px-md-5 mx-auto">
                     Search and manage employee accounts. Use the search bar to find employees by name, email, or ID.
                     Only employees with appropriate access levels are shown in this view.
                 </p>
@@ -266,188 +264,6 @@
         </div>
     </div>
 </div>
-
-<style>
-.search-page {
-    background-color: #f8fafc;
-    min-height: calc(100vh - 56px);
-    padding: 2rem 0 4rem;
-}
-
-.search-header h1 {
-    font-weight: 700;
-    color: #1e293b;
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.5px;
-}
-
-.search-header p {
-    color: #64748b;
-    font-size: 1.1rem;
-}
-
-.search-card {
-    border-radius: 0.75rem;
-    overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.search-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
-.search-bar .form-control {
-    border-radius: 0.5rem 0 0 0.5rem;
-    border-right: none;
-    padding: 0.85rem 1rem;
-    font-size: 1rem;
-    border-color: #e2e8f0;
-    transition: all 0.2s ease;
-}
-
-.search-bar .form-control:focus {
-    border-color: #c7d2fe;
-    box-shadow: 0 0 0 0.25rem rgba(79, 70, 229, 0.15);
-}
-
-.search-bar .btn {
-    border-radius: 0 0.5rem 0.5rem 0;
-    padding: 0.85rem 1.5rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-@keyframes pulse {
-    0% { opacity: 0.6; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.05); }
-    100% { opacity: 0.6; transform: scale(1); }
-}
-
-.loading {
-    animation: pulse 1.5s infinite ease-in-out;
-}
-
-.search-loading .search-results {
-    opacity: 0.6;
-    pointer-events: none;
-    position: relative;
-}
-
-.search-loading .search-results::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(255, 255, 255, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-}
-
-/* User row hover effect */
-.user-row {
-    transition: background-color 0.2s ease;
-}
-
-.user-row:hover {
-    background-color: #f8fafc;
-}
-
-/* Status indicator */
-.position-absolute.bg-success {
-    box-shadow: 0 0 0 2px #fff;
-}
-
-/* Badge styling */
-.badge {
-    font-weight: 500;
-    padding: 0.5em 0.8em;
-    font-size: 0.8em;
-    letter-spacing: 0.3px;
-    border-radius: 6px;
-    text-transform: capitalize;
-}
-
-.table th {
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    letter-spacing: 0.5px;
-    color: #6c757d;
-    border-top: none;
-    padding: 1rem 1.5rem;
-    background-color: #f8f9fa;
-}
-
-.table td {
-    padding: 1.25rem 1.5rem;
-    vertical-align: middle;
-    border-color: #edf2f9;
-}
-
-.table-hover > tbody > tr:hover {
-    background-color: rgba(0, 86, 15, 0.03);
-}
-
-.btn-outline-primary {
-    color: #00560f;
-    border-color: #00560f;
-}
-
-.btn-outline-primary:hover {
-    background-color: #00560f;
-    border-color: #00560f;
-}
-
-.btn-primary {
-    background-color: #00560f;
-    border-color: #00560f;
-}
-
-.btn-primary:hover {
-    background-color: #00420c;
-    border-color: #00420c;
-}
-
-.no-results, .welcome-message {
-    background: white;
-    border-radius: 10px;
-    padding: 2rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-}
-
-.no-results-icon, .welcome-icon {
-    margin-bottom: 1rem;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .search-bar {
-        flex-direction: column;
-    }
-    
-    .search-btn {
-        position: relative;
-        margin-top: 0.5rem;
-        width: 100%;
-        right: auto;
-        transform: none;
-        top: auto;
-    }
-    
-    .filters-container {
-        padding: 1rem;
-    }
-    
-    .table-responsive {
-        border: none;
-    }
-}
-</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {

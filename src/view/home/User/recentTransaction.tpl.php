@@ -1,19 +1,3 @@
-<style>
-    .Print {
-        display: inline-block;
-        padding: 8px 16px;
-        background-color: #ffc720;
-        color: white;
-        text-decoration: none;
-        border-radius: 4px;
-        text-align: center;
-    }
-
-    .Print:hover {
-        background-color: #f39c12;
-    }
-</style>
-
 <section>
 
     <h1 class="heading">Recent Transactions</h1>

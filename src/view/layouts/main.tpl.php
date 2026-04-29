@@ -53,7 +53,7 @@ $userData = $currentUser ?? null;
 ?>
 <header class="header">
     <section class="flex">
-        <div id="menu-btn" class="fas fa-bars" style="margin-right: 1.5rem; font-size: 1.7rem; cursor: pointer;"></div>
+        <div id="menu-btn" class="fas fa-bars"></div>
         <a href="/" class="logo">Department of Land and Survey</a>
         <form action="search" method="post" class="search-form">
             <input type="text" name="search_box" required placeholder="Search..." maxlength="100">
@@ -61,6 +61,7 @@ $userData = $currentUser ?? null;
         </form>
         <div class="icons">
             <div id="lang-btn" class="fa-solid fa-language"></div>
+            <div id="wallet-btn" class="fa-brands fa-ethereum" title="Connect Wallet" aria-label="Connect Wallet"></div>
             <div id="search-btn" class="fas fa-search"></div>
             <div id="user-btn" class="fas fa-user"></div>
             <div id="toggle-btn" class="fas fa-sun"></div>
@@ -89,22 +90,20 @@ $userData = $currentUser ?? null;
     </section>
 </header>
 
-<?php if (isset($content)): ?>
-    <?= $content ?>
-<?php endif; ?>
+<div id="wallet-toast" class="wallet-toast" role="status" aria-live="polite" hidden></div>
 
 <?php if (empty($hiddenNavbar)) include_once 'navbar.tpl.php'; ?>
-<div class="container">
-    <div class="row">
-        <div class="col">
-            {{content}}
+<main class="main-content" id="main">
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                {{content}}
+            </div>
         </div>
     </div>
-</div>
+</main>
 <?php include_once 'footer.tpl.php'; ?>
 <script src="<?= url('style/javascript/bootstrap.bundle.min.js'); ?>"></script>
-</body>
-
 <script>
 
     let toggleBtn = document.getElementById('toggle-btn');
@@ -172,63 +171,43 @@ $userData = $currentUser ?? null;
         }
     }
 
+    // Header: Connect Wallet (MetaMask) without navigation
+    const walletBtn = document.getElementById('wallet-btn');
+    const walletToast = document.getElementById('wallet-toast');
+    const showWalletToast = (msg, kind) => {
+        if (!walletToast) return;
+        walletToast.hidden = false;
+        walletToast.className = 'wallet-toast' + (kind ? ` ${kind}` : '');
+        walletToast.textContent = msg;
+        clearTimeout(window.__walletToastTimer);
+        window.__walletToastTimer = setTimeout(() => { walletToast.hidden = true; }, 4000);
+    };
+
+    async function connectWalletInline() {
+        if (typeof window.ethereum === 'undefined') {
+            showWalletToast('MetaMask not detected. Redirecting to download…', 'is-warning');
+            setTimeout(() => { window.location.href = 'https://metamask.io/download.html'; }, 700);
+            return;
+        }
+        try {
+            showWalletToast('Connecting wallet…', null);
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            const account = accounts?.[0] ?? '';
+            if (!account) {
+                showWalletToast('No account returned from wallet.', 'is-warning');
+                return;
+            }
+            const shortAcc = account.substring(0, 6) + '...' + account.substring(account.length - 4);
+            showWalletToast(`Connected: ${shortAcc}`, 'is-success');
+        } catch (e) {
+            showWalletToast('Connection cancelled or failed.', 'is-error');
+        }
+    }
+
+    if (walletBtn) {
+        walletBtn.onclick = () => connectWalletInline();
+    }
+
 </script>
-
-<style>
-.profile.profile-dropdown {
-    position: absolute;
-    top: 60px;
-    right: 40px;
-    min-width: 220px;
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.10);
-    padding: 1.2rem 1.2rem 1rem 1.2rem;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(-18px) scale(0.98);
-    transition: opacity 0.25s cubic-bezier(.4,0,.2,1), transform 0.25s cubic-bezier(.4,0,.2,1);
-}
-.profile.profile-dropdown.active {
-    opacity: 1;
-    pointer-events: auto;
-    transform: translateY(0) scale(1);
-}
-.profile.profile-dropdown .image {
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #146C43;
-    margin-bottom: 0.5rem;
-}
-.profile.profile-dropdown .name {
-    font-size: 1.1em;
-    font-weight: 600;
-    color: #146C43;
-    margin-bottom: 0.2rem;
-}
-.profile.profile-dropdown .role {
-    font-size: 0.98em;
-    color: #888;
-    margin-bottom: 0.7rem;
-}
-.profile.profile-dropdown .btn,
-.profile.profile-dropdown .option-btn {
-    width: 100%;
-    margin-bottom: 0.5rem;
-    text-align: center;
-}
-.profile.profile-dropdown .flex-btn {
-    width: 100%;
-    display: flex;
-    gap: 0.5rem;
-    justify-content: center;
-}
-</style>
-
+</body>
 </html>

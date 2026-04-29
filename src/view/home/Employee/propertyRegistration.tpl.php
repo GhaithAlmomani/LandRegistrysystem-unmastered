@@ -2,324 +2,222 @@
 require_once __DIR__ . '/../../../../src/middleware/AuthMiddleware.php';
 use MVC\middleware\AuthMiddleware;
 
-// Ensure only employees can access this page
 AuthMiddleware::requireEmployee();
-
-require_once __DIR__ . '/../../layouts/navbar.tpl.php';
 ?>
 
-<section>
-    <h1 class="heading">Employee Portal</h1>
+<section class="admin-page property-registration-page">
+    <header class="property-registration-hero card">
+        <div class="property-registration-hero__badge admin-portal-badge">
+            <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
+            <span>Blockchain</span>
+        </div>
+        <h1 class="heading property-registration-hero__title">Property Registration</h1>
+        <p class="property-registration-hero__lead">
+            Register a new parcel on-chain after internal checks. Property IDs are assigned by the contract when the transaction succeeds.
+            Connect MetaMask, complete the form, then confirm the transaction.
+        </p>
+    </header>
 
-    <style>
+    <div id="alertContainer" class="property-registration-alerts" aria-live="polite"></div>
 
-        /* Form Container */
-        #registerForm {
-            background-color: var(--white);
-            border-radius: .5rem;
-            padding: 2rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            margin: 2rem auto; /* Center the form */
-            max-width: 600px; /* Set a max width for the form */
-        }
+    <div id="walletStatus" class="admin-page-status" role="status">Connecting to wallet…</div>
 
-        /* Form Labels */
-        .form-label {
-            font-size: 1.8rem;
-            color: var(--black);
-            margin-bottom: 1rem; /* Space below the label */
-            display: block; /* Ensure labels are block elements */
-        }
+    <div class="card admin-page-card">
+        <h2 class="title" style="margin-top:0;">Registration details</h2>
+        <p class="tutor" style="margin-top:0;">
+            Provide the owner wallet, a short description, and coordinates (latitude −90…90°, longitude −180…180°). The server validates before any gas is used.
+        </p>
 
-        /* Form Inputs */
-        .form-control {
-            width: 100%;
-            padding: 1.2rem; /* Padding inside the input */
-            font-size: 1.6rem; /* Font size for input text */
-            border: var(--border);
-            border-radius: .5rem;
-            background-color: var(--light-bg);
-            color: var(--black);
-            margin-bottom: 1.5rem; /* Space below each input */
-            transition: border-color 0.3s; /* Smooth transition for border color */
-        }
+        <form id="registerForm" method="POST" action="propertyRegistration" class="admin-page-form">
+            <?= \MVC\core\CSRFToken::generateFormField() ?>
 
-        /* Input Focus State */
-        .form-control:focus {
-            border-color: var(--main-color); /* Change border color on focus */
-            outline: none; /* Remove default outline */
-        }
+            <label class="admin-page-label" for="owner">Owner wallet</label>
+            <input type="text" class="box contract-address-input" id="owner" name="owner" required maxlength="42"
+                   placeholder="0x…" autocomplete="off" spellcheck="false" aria-describedby="ownerHelp">
+            <p class="admin-page-help" id="ownerHelp">Ethereum address of the registered owner.</p>
 
-        /* Help Text */
-        .form-text {
-            font-size: 1.4rem;
-            color: var(--light-color);
-            margin-top: .5rem; /* Space above help text */
-        }
+            <label class="admin-page-label" for="description">Description</label>
+            <input type="text" class="box" id="description" name="description" required maxlength="255"
+                   placeholder="Brief parcel description" autocomplete="off" aria-describedby="descriptionHelp">
+            <p class="admin-page-help" id="descriptionHelp">Short label or notes stored with the property (max 255 characters).</p>
 
-        /* Button Styling */
-        .btn-primary {
-            background-color: var(--main-color);
-            color: var(--white);
-            font-size: 1.8rem;
-            padding: 1rem 2rem; /* Padding for the button */
-            border-radius: .5rem;
-            cursor: pointer;
-            transition: background-color 0.3s; /* Smooth transition for background color */
-        }
+            <div class="property-registration-coords">
+                <div>
+                    <label class="admin-page-label" for="latitude">Latitude</label>
+                    <input type="text" class="box" id="latitude" name="latitude" required inputmode="decimal"
+                           placeholder="e.g. 31.9539" autocomplete="off" aria-describedby="latitudeHelp">
+                    <p class="admin-page-help" id="latitudeHelp">Degrees north/south (−90 to 90).</p>
+                </div>
+                <div>
+                    <label class="admin-page-label" for="longitude">Longitude</label>
+                    <input type="text" class="box" id="longitude" name="longitude" required inputmode="decimal"
+                           placeholder="e.g. 35.9106" autocomplete="off" aria-describedby="longitudeHelp">
+                    <p class="admin-page-help" id="longitudeHelp">Degrees east/west (−180 to 180).</p>
+                </div>
+            </div>
 
-        /* Button Hover State */
-        .btn-primary:hover {
-            background-color: var(--black); /* Change background color on hover */
-        }
-        /* Form Container */
-        #transferOwnershipForm {
-            background-color: var(--white);
-            border-radius: .5rem;
-            padding: 2rem;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            margin: 2rem auto; /* Center the form */
-            max-width: 600px; /* Set a max width for the form */
-        }
-
-        /* Form Labels */
-        .form-label {
-            font-size: 1.8rem;
-            color: var(--black);
-            margin-bottom: 1rem; /* Space below the label */
-            display: block; /* Ensure labels are block elements */
-        }
-
-        /* Form Inputs */
-        .form-control {
-            width: 100%;
-            padding: 1.2rem; /* Padding inside the input */
-            font-size: 1.6rem; /* Font size for input text */
-            border: var(--border);
-            border-radius: .5rem;
-            background-color: var(--light-bg);
-            color: var(--black);
-            margin-bottom: 1.5rem; /* Space below each input */
-            transition: border-color 0.3s; /* Smooth transition for border color */
-        }
-
-        /* Input Focus State */
-        .form-control:focus {
-            border-color: var(--main-color); /* Change border color on focus */
-            outline: none; /* Remove default outline */
-        }
-
-        /* Help Text */
-        .form-text {
-            font-size: 1.4rem;
-            color: var(--light-color);
-            margin-top: .5rem; /* Space above help text */
-        }
-
-        /* Button Styling */
-        .btn-primary {
-            background-color: var(--main-color);
-            color: var(--white);
-            font-size: 1.8rem;
-            padding: 1rem 2rem; /* Padding for the button */
-            border-radius: .5rem;
-            cursor: pointer;
-            transition: background-color 0.3s; /* Smooth transition for background color */
-        }
-
-        /* Button Hover State */
-        .btn-primary:hover {
-            background-color: var(--black); /* Change background color on hover */
-        }
-    </style>
-
-    <!-- Custom Alert Styles -->
-    <style>
-        .custom-alert {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 8px;
-            font-size: 1.6rem;
-            color: white;
-            z-index: 1000;
-            display: none;
-            animation: slideIn 0.5s ease-out;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .alert-success {
-            background-color: #28a745;
-            border-left: 5px solid #1e7e34;
-        }
-
-        .alert-error {
-            background-color: #dc3545;
-            border-left: 5px solid #bd2130;
-        }
-
-        .alert-info {
-            background-color: #17a2b8;
-            border-left: 5px solid #117a8b;
-        }
-
-        @keyframes slideIn {
-            from {
-                transform: translateX(100%);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes fadeOut {
-            from {
-                opacity: 1;
-            }
-            to {
-                opacity: 0;
-            }
-        }
-
-        .alert-close {
-            margin-left: 15px;
-            cursor: pointer;
-            font-weight: bold;
-            float: right;
-        }
-    </style>
-
-    <!-- Alert Container -->
-    <div id="alertContainer"></div>
-
-    <form id="registerForm" method="POST" action="/propertyRegistration">
-        <?= \MVC\core\CSRFToken::generateFormField() ?>
-
-        <h1 class="heading">Property Registration</h1>
-
-    <div class="mb-3">
-        <p class="form-text" style="margin-bottom: 1.5rem;">Property IDs are assigned automatically on the blockchain when registration succeeds.</p>
+            <div class="admin-page-actions property-registration-actions">
+                <button type="submit" class="inline-btn">
+                    <i class="fa-solid fa-plus-circle" aria-hidden="true"></i>
+                    Register property
+                </button>
+            </div>
+        </form>
     </div>
 
-    <div class="mb-3">
-        <label for="owner" class="form-label">Owner ID</label>
-        <input type="text" class="form-control" id="owner" name="owner" aria-describedby="ownerHelp" required maxlength="42" placeholder="0x...">
-        <div id="ownerHelp" class="form-text">Enter the Owner address</div>
+    <div class="card admin-page-card property-registration-notes">
+        <h3 class="title" style="margin-top:0;">Before you submit</h3>
+        <ul class="property-registration-notes__list">
+            <li>Use the network where the registry contract is deployed (e.g. Sepolia).</li>
+            <li>Coordinates must fall within valid latitude/longitude ranges or validation will fail.</li>
+            <li>After a successful receipt, the form clears—you can register another parcel.</li>
+        </ul>
     </div>
-
-    <div class="mb-3">
-        <label for="description" class="form-label">Description</label>
-        <input type="text" class="form-control" id="description" name="description" aria-describedby="descriptionHelp" required maxlength="255">
-        <div id="descriptionHelp" class="form-text">Enter a description for the property</div>
-    </div>
-
-    <div class="mb-3">
-        <label for="latitude" class="form-label">latitude address</label>
-        <input type="text" class="form-control" id="latitude" name="latitude" aria-describedby="latitudeHelp" required>
-        <div id="latitudeHelp" class="form-text">Enter the property latitude</div>
-    </div>
-
-    <div class="mb-3">
-        <label for="longitude" class="form-label">longitude address</label>
-        <input type="text" class="form-control" id="longitude" name="longitude" aria-describedby="longitudeHelp" required>
-        <div id="longitudeHelp" class="form-text">Enter the property longitude</div>
-    </div>
-
-    <button type="button" class="btn btn-primary" onclick="registerProperty()">Register Property</button>
-</form>
+</section>
 
 <script>
+(function () {
+    let web3;
+    let contract;
 
-        let web3;
-        let contract;
+    function showAlert(message, type) {
+        type = type || 'info';
+        var alertContainer = document.getElementById('alertContainer');
+        if (!alertContainer) return;
 
-        // Initialize web3
-        if (typeof window.ethereum !== 'undefined') {
-            web3 = new Web3(window.ethereum);
-            window.ethereum.enable();
-        } else {
+        var map = { success: 'pt-alert--success', error: 'pt-alert--error', info: 'pt-alert--info' };
+        var cls = map[type] || map.info;
+
+        var el = document.createElement('div');
+        el.className = 'pt-alert ' + cls;
+        el.setAttribute('role', 'status');
+        el.innerHTML =
+            '<span class="pt-alert__msg"></span>' +
+            '<button type="button" class="pt-alert__close" aria-label="Dismiss">&times;</button>';
+        el.querySelector('.pt-alert__msg').textContent = message;
+
+        el.querySelector('.pt-alert__close').addEventListener('click', function () {
+            el.remove();
+        });
+
+        alertContainer.appendChild(el);
+
+        window.setTimeout(function () {
+            el.classList.add('pt-alert--fade');
+            window.setTimeout(function () {
+                el.remove();
+            }, 320);
+        }, 5200);
+    }
+
+    window.addEventListener('load', async function () {
+        var statusEl = document.getElementById('walletStatus');
+        if (!window.ethereum) {
+            if (statusEl) {
+                statusEl.textContent = 'MetaMask is not installed.';
+                statusEl.className = 'admin-page-status is-error';
+            }
             showAlert('Please install MetaMask to use this feature.', 'error');
+            return;
         }
 
-        // Initialize contract
-        contract = new web3.eth.Contract(contractABI, contractAddress);
+        try {
+            web3 = new Web3(window.ethereum);
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
 
-        // Custom Alert Function
-        function showAlert(message, type = 'info') {
-            const alertContainer = document.getElementById('alertContainer');
-            const alert = document.createElement('div');
-            alert.className = `custom-alert alert-${type}`;
-            alert.innerHTML = `
-                <span>${message}</span>
-                <span class="alert-close" onclick="this.parentElement.remove()">&times;</span>
-            `;
-            alertContainer.appendChild(alert);
-            alert.style.display = 'block';
+            var accounts = await web3.eth.getAccounts();
+            var account = accounts[0];
 
-            // Auto remove after 5 seconds
-            setTimeout(() => {
-                alert.style.animation = 'fadeOut 0.5s ease-out';
-                setTimeout(() => {
-                    alert.remove();
-                }, 500);
-            }, 5000);
+            contract = new web3.eth.Contract(contractABI, contractAddress);
+
+            if (statusEl) {
+                statusEl.innerHTML =
+                    'Connected: <span class="contract-address">' + account + '</span>';
+                statusEl.className = 'admin-page-status is-success';
+            }
+            showAlert('Wallet connected.', 'success');
+        } catch (error) {
+            showAlert(
+                'Could not connect to MetaMask: ' + (error && error.message ? error.message : String(error)),
+                'error'
+            );
+            if (statusEl) {
+                statusEl.textContent = 'Wallet connection failed.';
+                statusEl.className = 'admin-page-status is-error';
+            }
+        }
+    });
+
+    var form = document.getElementById('registerForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        var fd = new FormData(form);
+        var owner = (fd.get('owner') || '').toString().trim();
+        var description = (fd.get('description') || '').toString().trim();
+        var latitude = (fd.get('latitude') || '').toString().trim();
+        var longitude = (fd.get('longitude') || '').toString().trim();
+
+        if (!owner || !description || !latitude || !longitude) {
+            showAlert('Please fill in all fields.', 'error');
+            return;
         }
 
-        // Register property function
-        async function registerProperty() {
-            const form = document.getElementById('registerForm');
-            const formData = new FormData(form);
-            const owner = (formData.get('owner') || '').toString();
-            const description = (formData.get('description') || '').toString();
-            const latitude = (formData.get('latitude') || '').toString();
-            const longitude = (formData.get('longitude') || '').toString();
+        if (!web3 || !contract) {
+            showAlert('Wallet or contract not ready. Refresh and connect MetaMask.', 'error');
+            return;
+        }
 
-            if (!owner || !description || !latitude || !longitude) {
-                showAlert('Please fill in all fields', 'error');
+        try {
+            var validateResp = await fetch('propertyRegistration', {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            var validateJson = await validateResp.json().catch(function () {
+                return null;
+            });
+            if (!validateResp.ok) {
+                var msg =
+                    validateJson && validateJson.errors
+                        ? Object.values(validateJson.errors).flat().join('\n')
+                        : 'Validation failed.';
+                showAlert(msg, 'error');
                 return;
             }
 
-            try {
-                // Server-side validation before blockchain call
-                const validateResp = await fetch('/propertyRegistration', {
-                    method: 'POST',
-                    body: formData,
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
-                const validateJson = await validateResp.json().catch(() => null);
-                if (!validateResp.ok) {
-                    const msg = validateJson?.errors ? Object.values(validateJson.errors).flat().join('\n') : 'Validation failed';
-                    showAlert(msg, 'error');
-                    return;
-                }
+            showAlert('Processing… approve the transaction in MetaMask.', 'info');
 
-                const accounts = await web3.eth.getAccounts();
-                
-                showAlert('Processing transaction...', 'info');
+            var accounts = await web3.eth.getAccounts();
 
-                contract.methods.registerProperty(owner, description, latitude, longitude)
+            contract.methods
+                .registerProperty(owner, description, latitude, longitude)
                 .send({ from: accounts[0] })
-                .on('transactionHash', function(hash) {
-                    showAlert(`Transaction sent! Hash: ${hash.substring(0, 10)}...`, 'info');
+                .on('transactionHash', function (hash) {
+                    showAlert('Submitted. Tx: ' + hash.substring(0, 12) + '…', 'info');
                 })
-                .on('receipt', function(receipt) {
-                    showAlert('Property registered successfully!', 'success');
-                    console.log(receipt);
-                    // Clear form
-                    document.getElementById('registerForm').reset();
+                .on('receipt', function () {
+                    showAlert('Property registered successfully.', 'success');
+                    form.reset();
+                    var st = document.getElementById('walletStatus');
+                    if (st && accounts[0]) {
+                        st.innerHTML = 'Connected: <span class="contract-address">' + accounts[0] + '</span>';
+                        st.className = 'admin-page-status is-success';
+                    }
                 })
-                .on('error', function(error) {
-                    showAlert(`Error: ${error.message}`, 'error');
-                    console.error(error);
+                .on('error', function (error) {
+                    showAlert(error && error.message ? error.message : 'Transaction failed.', 'error');
+                    var st = document.getElementById('walletStatus');
+                    if (st && accounts[0]) {
+                        st.innerHTML = 'Connected: <span class="contract-address">' + accounts[0] + '</span>';
+                        st.className = 'admin-page-status is-warning';
+                    }
                 });
-            } catch (error) {
-                showAlert(`Error: ${error.message}`, 'error');
-                console.error(error);
-            }
+        } catch (error) {
+            showAlert(error && error.message ? error.message : String(error), 'error');
         }
+    });
+})();
 </script>
-
-</section>

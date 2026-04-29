@@ -6,6 +6,8 @@ require_once __DIR__ . '/../../config/database.php';
 
 use MVC\middleware\AuthMiddleware;
 use MVC\core\CSRFToken;
+use MVC\model\Property;
+use MVC\model\PropertyTransfer;
 
 class EmployeeController extends Controller
 {
@@ -91,7 +93,21 @@ class EmployeeController extends Controller
     public function employeePortal(): bool|array|string
     {
         AuthMiddleware::requireEmployee();
-        return $this->render('home.Employee.employeePortal');
+
+        $pending_transfer_reviews = PropertyTransfer::countByStatus(PropertyTransfer::STATUS_PENDING);
+        $stuck_pending_over_7d = PropertyTransfer::countStuckPending(7);
+        $pending_transfers_latest = PropertyTransfer::findPendingLimited(10);
+
+        $properties_pending_transfer = Property::countByStatus(Property::STATUS_PENDING_TRANSFER);
+        $total_assets = Property::countAll();
+
+        return $this->render('home.Employee.employeePortal', [
+            'pending_transfer_reviews' => $pending_transfer_reviews,
+            'stuck_pending_over_7d' => $stuck_pending_over_7d,
+            'pending_transfers_latest' => $pending_transfers_latest,
+            'properties_pending_transfer' => $properties_pending_transfer,
+            'total_assets' => $total_assets,
+        ]);
     }
 
     public function testEmp(): bool|array|string

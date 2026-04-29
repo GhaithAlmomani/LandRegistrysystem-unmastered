@@ -7,36 +7,45 @@ AuthMiddleware::requireAdmin();
 ?>
 
 <section class="admin-dashboard">
-    <h1 class="heading">Admin Dashboard</h1>
-    <div class="dashboard-cards">
+    <h1 class="heading">Analytics Overview</h1>
 
-        <div class="dashboard-card">
-            <h3><?= $total_users ?></h3>
-            <p>Total Users</p>
+    <div class="card admin-page-card">
+        <h3 class="title">System Totals</h3>
+        <p class="tutor">High-level volume indicators for the registry platform.</p>
+
+        <div class="dashboard-cards">
+            <div class="dashboard-card">
+                <h3><?= (int)($total_users ?? 0) ?></h3>
+                <p>Total Users</p>
+            </div>
+            <div class="dashboard-card">
+                <h3><?= (int)($total_assets ?? 0) ?></h3>
+                <p>Total Assets</p>
+            </div>
+            <div class="dashboard-card">
+                <h3><?= (int)($total_orders ?? 0) ?></h3>
+                <p>Total Transfer Requests</p>
+            </div>
+            <div class="dashboard-card">
+                <h3><?= (int)($total_transactions ?? 0) ?></h3>
+                <p>Smart Contract Transactions (30d)</p>
+            </div>
         </div>
-        <div class="dashboard-card">
-            <h3><?= $total_assets ?></h3>
-            <p>Total Assets</p>
+
+        <div class="dashboard-chart-container">
+            <canvas id="txChart" height="100"></canvas>
         </div>
-        <div class="dashboard-card">
-            <h3><?= $total_orders ?></h3>
-            <p>Total Orders</p>
-        </div>
-        <div class="dashboard-card">
-            <h3><?= $total_transactions ?></h3>
-            <p>Smart Contract Transactions</p>
-        </div>
-    </div>
-    <div class="dashboard-chart-container">
-        <canvas id="txChart" height="100"></canvas>
     </div>
 </section>
 
 <!-- Chart.js CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-const ctx = document.getElementById('txChart').getContext('2d');
-const txChart = new Chart(ctx, {
+(function () {
+const el = document.getElementById('txChart');
+if (!el) return;
+const ctx = el.getContext('2d');
+new Chart(ctx, {
     type: 'bar',
     data: {
         labels: <?= json_encode($days) ?>,
@@ -78,14 +87,16 @@ const txChart = new Chart(ctx, {
         }
     }
 });
+(})();
 </script>
 
 <!-- Recent Transactions Table -->
 <section class="dashboard-recent-tx">
-    <h2 class="heading" style="font-size:1.7rem;margin-top:2rem;">Recent Transactions</h2>
-    <div class="table-container">
-        <table>
-            <thead>
+    <h2 class="heading">Recent Smart Contract Transactions</h2>
+    <div class="card admin-page-card">
+        <div class="table-container">
+            <table>
+                <thead>
                 <tr>
                     <th>Date</th>
                     <th>From</th>
@@ -93,128 +104,29 @@ const txChart = new Chart(ctx, {
                     <th>Tx Hash</th>
                     <th>Status</th>
                 </tr>
-            </thead>
-            <tbody>
-                <?php if ($tx_data && isset($tx_data['result']) && is_array($tx_data['result']) && count($tx_data['result']) > 0): ?>
+                </thead>
+                <tbody>
+                <?php if (!empty($tx_data) && isset($tx_data['result']) && is_array($tx_data['result']) && count($tx_data['result']) > 0): ?>
                     <?php foreach (array_slice(array_reverse($tx_data['result']), 0, 10) as $tx): ?>
                         <tr>
-                            <td><?= date('Y-m-d H:i', (int)$tx['timeStamp']) ?></td>
-                            <td><?= substr($tx['from'], 0, 8) . '...' ?></td>
-                            <td><?= $tx['to'] ? substr($tx['to'], 0, 8) . '...' : 'Contract Creation' ?></td>
-                            <td><a href="https://sepolia.etherscan.io/tx/<?= $tx['hash'] ?>" class="inline-btn tx-link" target="_blank">View</a></td>
-                            <td><span class="status-pill<?= $tx['isError'] === '0' ? '' : ' status-failed' ?>"><?= $tx['isError'] === '0' ? 'Success' : 'Failed' ?></span></td>
+                            <td><?= date('Y-m-d H:i', (int)($tx['timeStamp'] ?? 0)) ?></td>
+                            <td><?= isset($tx['from']) ? (substr($tx['from'], 0, 8) . '...') : '' ?></td>
+                            <td><?= !empty($tx['to']) ? (substr((string)$tx['to'], 0, 8) . '...') : 'Contract Creation' ?></td>
+                            <td>
+                                <?php if (!empty($tx['hash'])): ?>
+                                    <a href="https://sepolia.etherscan.io/tx/<?= htmlspecialchars((string)$tx['hash']) ?>" class="inline-btn tx-link" target="_blank" rel="noopener">View</a>
+                                <?php else: ?>
+                                    —
+                                <?php endif; ?>
+                            </td>
+                            <td><span class="status-pill<?= (($tx['isError'] ?? '0') === '0') ? '' : ' status-failed' ?>"><?= (($tx['isError'] ?? '0') === '0') ? 'Success' : 'Failed' ?></span></td>
                         </tr>
                     <?php endforeach; ?>
                 <?php else: ?>
                     <tr><td colspan="5">No transactions found.</td></tr>
                 <?php endif; ?>
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        </div>
     </div>
 </section>
-
-<style>
-.admin-dashboard {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2rem;
-}
-.dashboard-cards {
-    display: flex;
-    gap: 2rem;
-    margin-bottom: 3rem;
-    flex-wrap: wrap;
-}
-.dashboard-card {
-    flex: 1 1 200px;
-    background: var(--white);
-    border-radius: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    padding: 2rem 1.5rem;
-    text-align: center;
-    border: var(--border);
-}
-.dashboard-card h3 {
-    font-size: 2.8rem;
-    color: var(--main-color);
-    margin-bottom: 0.5rem;
-}
-.dashboard-card p {
-    font-size: 1.3rem;
-    color: var(--light-color);
-    margin: 0;
-}
-.dashboard-chart-container {
-    background: var(--white);
-    border-radius: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    padding: 2rem;
-    border: var(--border);
-}
-.dashboard-recent-tx .table-container {
-    overflow-x: auto;
-    border-radius: .9rem;
-    box-shadow: 0 2px 14px rgba(0, 0, 0, 0.13);
-    background-color: var(--white);
-    padding: 0rem;
-    margin-top: 2.5rem;
-}
-.dashboard-recent-tx table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    font-size: 1.7rem;
-}
-.dashboard-recent-tx th, .dashboard-recent-tx td {
-    padding: 1.5rem 1.2rem;
-    text-align: center;
-    border-bottom: 1px solid var(--border);
-    font-size: 1.35rem;
-}
-.dashboard-recent-tx th {
-    background-color: var(--light-bg);
-    color: var(--black);
-    text-transform: uppercase;
-    font-size: 1.25rem;
-    letter-spacing: 0.7px;
-}
-.dashboard-recent-tx tr:nth-child(even) {
-    background-color: #f7f7f7;
-}
-.dashboard-recent-tx tr:nth-child(odd) {
-    background-color: var(--white);
-}
-.dashboard-recent-tx tr:hover {
-    background-color: var(--main-color);
-    color: var(--white);
-}
-.dashboard-recent-tx td a.tx-link, .dashboard-recent-tx td a.inline-btn {
-    display: inline-block;
-    padding: 0.7rem 2.2rem;
-    background: var(--main-color);
-    color: #fff !important;
-    border-radius: 0.5rem;
-    font-size: 1.25rem;
-    text-decoration: none;
-    font-weight: 700;
-    transition: background 0.18s;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.07);
-    margin: 0 auto;
-}
-.dashboard-recent-tx td a.tx-link:hover, .dashboard-recent-tx td a.inline-btn:hover {
-    background: var(--black);
-}
-.dashboard-recent-tx .status-pill {
-    font-size: 1.25rem;
-    padding: 0.5rem 1.7rem;
-}
-.dashboard-recent-tx .status-failed {
-    background: #e74c3c;
-}
-.dashboard-recent-tx .heading {
-    font-size: 2.3rem !important;
-    margin-top: 2.5rem;
-    margin-bottom: 1.5rem;
-    text-align: left;
-}
-</style> 

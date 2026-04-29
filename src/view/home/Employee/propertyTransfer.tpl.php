@@ -2,382 +2,213 @@
 require_once __DIR__ . '/../../../../src/middleware/AuthMiddleware.php';
 use MVC\middleware\AuthMiddleware;
 
-// Ensure only employees can access this page
 AuthMiddleware::requireEmployee();
-
-require_once __DIR__ . '/../../layouts/navbar.tpl.php';
 ?>
 
-<section>
-    <h1 class="heading">Employee Portal</h1>
+<section class="admin-page property-transfer-page">
+    <header class="property-transfer-hero card">
+        <div class="property-transfer-hero__badge admin-portal-badge">
+            <i class="fa-solid fa-link" aria-hidden="true"></i>
+            <span>Blockchain</span>
+        </div>
+        <h1 class="heading property-transfer-hero__title">Property Transfer</h1>
+        <p class="property-transfer-hero__lead">
+            Record an on-chain ownership transfer after internal review is complete. Connect MetaMask, validate inputs,
+            then submit the contract transaction from your authorized wallet.
+        </p>
+    </header>
 
+    <div id="alertContainer" class="property-transfer-alerts" aria-live="polite"></div>
 
-    <style>
+    <div id="walletStatus" class="admin-page-status" role="status">Connecting to wallet…</div>
 
-    /* Form Container */
-    #registerForm {
-        background-color: var(--white);
-        border-radius: .5rem;
-        padding: 2rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        margin: 2rem auto; /* Center the form */
-        max-width: 600px; /* Set a max width for the form */
-    }
+    <div class="card admin-page-card">
+        <h2 class="title" style="margin-top:0;">Transfer details</h2>
+        <p class="tutor" style="margin-top:0;">
+            Enter the property identifier and Ethereum addresses exactly as registered on the contract. Server-side checks run before the blockchain call.
+        </p>
 
-    /* Form Labels */
-    .form-label {
-        font-size: 1.8rem;
-        color: var(--black);
-        margin-bottom: 1rem; /* Space below the label */
-        display: block; /* Ensure labels are block elements */
-    }
+        <form id="transferOwnershipForm" method="POST" action="propertyTransfer" class="admin-page-form">
+            <?= \MVC\core\CSRFToken::generateFormField() ?>
 
-    /* Form Inputs */
-    .form-control {
-        width: 100%;
-        padding: 1.2rem; /* Padding inside the input */
-        font-size: 1.6rem; /* Font size for input text */
-        border: var(--border);
-        border-radius: .5rem;
-        background-color: var(--light-bg);
-        color: var(--black);
-        margin-bottom: 1.5rem; /* Space below each input */
-        transition: border-color 0.3s; /* Smooth transition for border color */
-    }
+            <label class="admin-page-label" for="propertyId">Property ID</label>
+            <input type="text" class="box" id="propertyId" name="propertyId" required maxlength="64"
+                   autocomplete="off" placeholder="e.g. property identifier from the registry">
+            <p class="admin-page-help" id="propertyIdHelp">On-chain property identifier to transfer.</p>
 
-    /* Input Focus State */
-    .form-control:focus {
-        border-color: var(--main-color); /* Change border color on focus */
-        outline: none; /* Remove default outline */
-    }
+            <label class="admin-page-label" for="newOwner">New owner wallet</label>
+            <input type="text" class="box contract-address-input" id="newOwner" name="newOwner" required maxlength="42"
+                   placeholder="0x…" autocomplete="off" spellcheck="false">
+            <p class="admin-page-help" id="newOwnerHelp">Buyer or transferee wallet address (42 characters).</p>
 
-    /* Help Text */
-    .form-text {
-        font-size: 1.4rem;
-        color: var(--light-color);
-        margin-top: .5rem; /* Space above help text */
-    }
+            <label class="admin-page-label" for="previousOwner">Previous owner wallet</label>
+            <input type="text" class="box contract-address-input" id="previousOwner" name="previousOwner" required maxlength="42"
+                   placeholder="0x…" autocomplete="off" spellcheck="false">
+            <p class="admin-page-help" id="previousOwnerHelp">Current owner wallet address on the contract.</p>
 
-    /* Button Styling */
-    .btn-primary {
-        background-color: var(--main-color);
-        color: var(--white);
-        font-size: 1.8rem;
-        padding: 1rem 2rem; /* Padding for the button */
-        border-radius: .5rem;
-        cursor: pointer;
-        transition: background-color 0.3s; /* Smooth transition for background color */
-    }
-
-    /* Button Hover State */
-    .btn-primary:hover {
-        background-color: var(--black); /* Change background color on hover */
-    }
-    /* Form Container */
-    #transferOwnershipForm {
-        background-color: var(--white);
-        border-radius: .5rem;
-        padding: 2rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        margin: 2rem auto; /* Center the form */
-        max-width: 600px; /* Set a max width for the form */
-    }
-
-    /* Form Labels */
-    .form-label {
-        font-size: 1.8rem;
-        color: var(--black);
-        margin-bottom: 1rem; /* Space below the label */
-        display: block; /* Ensure labels are block elements */
-    }
-
-    /* Form Inputs */
-    .form-control {
-        width: 100%;
-        padding: 1.2rem; /* Padding inside the input */
-        font-size: 1.6rem; /* Font size for input text */
-        border: var(--border);
-        border-radius: .5rem;
-        background-color: var(--light-bg);
-        color: var(--black);
-        margin-bottom: 1.5rem; /* Space below each input */
-        transition: border-color 0.3s; /* Smooth transition for border color */
-    }
-
-    /* Input Focus State */
-    .form-control:focus {
-        border-color: var(--main-color); /* Change border color on focus */
-        outline: none; /* Remove default outline */
-    }
-
-    /* Help Text */
-    .form-text {
-        font-size: 1.4rem;
-        color: var(--light-color);
-        margin-top: .5rem; /* Space above help text */
-    }
-
-    /* Button Styling */
-    .btn-primary {
-        background-color: var(--main-color);
-        color: var(--white);
-        font-size: 1.8rem;
-        padding: 1rem 2rem; /* Padding for the button */
-        border-radius: .5rem;
-        cursor: pointer;
-        transition: background-color 0.3s; /* Smooth transition for background color */
-    }
-
-    /* Button Hover State */
-    .btn-primary:hover {
-        background-color: var(--black); /* Change background color on hover */
-    }
-
-    /* Custom Alert Styles */
-    .custom-alert {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 25px;
-        border-radius: 8px;
-        font-size: 1.6rem;
-        color: white;
-        z-index: 1000;
-        display: none;
-        animation: slideIn 0.5s ease-out;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .alert-success {
-        background-color: #28a745;
-        border-left: 5px solid #1e7e34;
-    }
-
-    .alert-error {
-        background-color: #dc3545;
-        border-left: 5px solid #bd2130;
-    }
-
-    .alert-info {
-        background-color: #17a2b8;
-        border-left: 5px solid #117a8b;
-    }
-
-    @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-
-    @keyframes fadeOut {
-        from {
-            opacity: 1;
-        }
-        to {
-            opacity: 0;
-        }
-    }
-
-    .alert-close {
-        margin-left: 15px;
-        cursor: pointer;
-        font-weight: bold;
-        float: right;
-    }
-
-    #status {
-        margin-top: 1rem;
-        padding: 1rem;
-        border-radius: .5rem;
-        font-size: 1.6rem;
-        text-align: center;
-    }
-
-    .status-connected {
-        background-color: #d4edda;
-        color: #155724;
-        border: 1px solid #c3e6cb;
-    }
-
-    .status-error {
-        background-color: #f8d7da;
-        color: #721c24;
-        border: 1px solid #f5c6cb;
-    }
-</style>
-
-<!-- Alert Container -->
-<div id="alertContainer"></div>
-
-<form id="transferOwnershipForm" method="POST" action="/propertyTransfer">
-    <?= \MVC\core\CSRFToken::generateFormField() ?>
-
-    <h1 class="heading">Property Transfer</h1>
-
-
-    <div class="mb-3">
-        <label for="propertyId" class="form-label">Property ID</label>
-        <input type="text" class="form-control" id="propertyId" name="propertyId" aria-describedby="propertyIdHelp" required maxlength="64">
-        <div id="propertyIdHelp" class="form-text">Enter The ID for the property</div>
+            <div class="admin-page-actions property-transfer-actions">
+                <button type="submit" class="inline-btn">
+                    <i class="fa-solid fa-arrow-right-arrow-left" aria-hidden="true"></i>
+                    Transfer ownership
+                </button>
+            </div>
+        </form>
     </div>
 
-    <div class="mb-3">
-        <label for="newOwner" class="form-label">New Owner Address</label>
-        <input type="text" class="form-control" id="newOwner" name="newOwner" aria-describedby="newOwnerHelp" required maxlength="42" placeholder="0x...">
-        <div id="newOwnerdHelp" class="form-text">Enter The new owner ID</div>
+    <div class="card admin-page-card property-transfer-notes">
+        <h3 class="title" style="margin-top:0;">Before you submit</h3>
+        <ul class="property-transfer-notes__list">
+            <li>Use the same network the registry contract is deployed on (e.g. Sepolia).</li>
+            <li>Ensure your connected account is authorized to perform this action.</li>
+            <li>If validation fails, fix the fields shown and try again—no gas is spent until the contract call runs.</li>
+        </ul>
     </div>
-
-    <div class="mb-3">
-        <label for="perviousOwner" class="form-label">Previous Owner Address</label>
-        <input type="text" class="form-control" id="previousOwner" name="previousOwner" aria-describedby="previousOwnerHelp" required maxlength="42" placeholder="0x...">
-        <div id="previousOwnerdHelp" class="form-text">Enter The previous owner ID</div>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Transfer Ownership</button>
-
-
-    <p id="status"></p>
-
-</form>
-
-<!--<p id="status"></p> -->
+</section>
 
 <script>
+(function () {
     let web3;
     let contract;
 
-    // Custom Alert Function
     function showAlert(message, type = 'info') {
         const alertContainer = document.getElementById('alertContainer');
-        const alert = document.createElement('div');
-        alert.className = `custom-alert alert-${type}`;
-        alert.innerHTML = `
-            <span>${message}</span>
-            <span class="alert-close" onclick="this.parentElement.remove()">&times;</span>
-        `;
-        alertContainer.appendChild(alert);
-        alert.style.display = 'block';
+        if (!alertContainer) return;
 
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            alert.style.animation = 'fadeOut 0.5s ease-out';
-            setTimeout(() => {
-                alert.remove();
-            }, 500);
-        }, 5000);
+        const map = { success: 'pt-alert--success', error: 'pt-alert--error', info: 'pt-alert--info' };
+        const cls = map[type] || map.info;
+
+        const el = document.createElement('div');
+        el.className = 'pt-alert ' + cls;
+        el.setAttribute('role', 'status');
+        el.innerHTML =
+            '<span class="pt-alert__msg"></span>' +
+            '<button type="button" class="pt-alert__close" aria-label="Dismiss">&times;</button>';
+        el.querySelector('.pt-alert__msg').textContent = message;
+
+        el.querySelector('.pt-alert__close').addEventListener('click', function () {
+            el.remove();
+        });
+
+        alertContainer.appendChild(el);
+
+        window.setTimeout(function () {
+            el.classList.add('pt-alert--fade');
+            window.setTimeout(function () {
+                el.remove();
+            }, 320);
+        }, 5200);
     }
 
-    window.addEventListener('load', async () => {
-        if (window.ethereum) {
-            try {
-                web3 = new Web3(window.ethereum);
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-                const accounts = await web3.eth.getAccounts();
-                const account = accounts[0];
-
-                contract = new web3.eth.Contract(contractABI, contractAddress);
-                document.getElementById("status").innerText = "Connected as: " + account;
-                document.getElementById("status").className = "status-connected";
-                showAlert('Successfully connected to MetaMask', 'success');
-            } catch (error) {
-                showAlert('Error connecting to MetaMask: ' + error.message, 'error');
-                document.getElementById("status").innerText = "Error connecting to MetaMask";
-                document.getElementById("status").className = "status-error";
+    window.addEventListener('load', async function () {
+        const statusEl = document.getElementById('walletStatus');
+        if (!window.ethereum) {
+            if (statusEl) {
+                statusEl.textContent = 'MetaMask is not installed.';
+                statusEl.className = 'admin-page-status is-error';
             }
-        } else {
-            showAlert('Please install MetaMask to use this feature', 'error');
-            document.getElementById("status").innerText = "Please install MetaMask!";
-            document.getElementById("status").className = "status-error";
-        }
-    });
-
-    document.getElementById('transferOwnershipForm').addEventListener('submit', async (event) => {
-        event.preventDefault();
-
-        const form = document.getElementById('transferOwnershipForm');
-        const formData = new FormData(form);
-        const propertyId = (formData.get('propertyId') || '').toString();
-        const newOwner = (formData.get('newOwner') || '').toString();
-        const previousOwner = (formData.get('previousOwner') || '').toString();
-
-        if (!propertyId || !newOwner || !previousOwner) {
-            showAlert('Please fill in all fields', 'error');
+            showAlert('Please install MetaMask to use this feature.', 'error');
             return;
         }
 
         try {
-            // Server-side validation before blockchain call
-            const validateResp = await fetch('/propertyTransfer', {
+            web3 = new Web3(window.ethereum);
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+
+            const accounts = await web3.eth.getAccounts();
+            const account = accounts[0];
+
+            contract = new web3.eth.Contract(contractABI, contractAddress);
+
+            if (statusEl) {
+                statusEl.innerHTML =
+                    'Connected: <span class="contract-address">' + account + '</span>';
+                statusEl.className = 'admin-page-status is-success';
+            }
+            showAlert('Wallet connected.', 'success');
+        } catch (error) {
+            showAlert('Could not connect to MetaMask: ' + (error && error.message ? error.message : String(error)), 'error');
+            if (statusEl) {
+                statusEl.textContent = 'Wallet connection failed.';
+                statusEl.className = 'admin-page-status is-error';
+            }
+        }
+    });
+
+    var form = document.getElementById('transferOwnershipForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const fd = new FormData(form);
+        var propertyId = (fd.get('propertyId') || '').toString().trim();
+        var newOwner = (fd.get('newOwner') || '').toString().trim();
+        var previousOwner = (fd.get('previousOwner') || '').toString().trim();
+
+        if (!propertyId || !newOwner || !previousOwner) {
+            showAlert('Please fill in all fields.', 'error');
+            return;
+        }
+
+        if (!web3 || !contract) {
+            showAlert('Wallet or contract not ready. Refresh and connect MetaMask.', 'error');
+            return;
+        }
+
+        try {
+            const validateResp = await fetch('propertyTransfer', {
                 method: 'POST',
-                body: formData,
+                body: fd,
                 headers: { 'X-Requested-With': 'XMLHttpRequest' }
             });
-            const validateJson = await validateResp.json().catch(() => null);
+            const validateJson = await validateResp.json().catch(function () { return null; });
             if (!validateResp.ok) {
-                const msg = validateJson?.errors ? Object.values(validateJson.errors).flat().join('\n') : 'Validation failed';
+                var msg = validateJson && validateJson.errors
+                    ? Object.values(validateJson.errors).flat().join('\n')
+                    : 'Validation failed.';
                 showAlert(msg, 'error');
                 return;
             }
 
-            showAlert('Processing transfer request...', 'info');
+            showAlert('Processing transfer… approve the transaction in MetaMask.', 'info');
+
             const accounts = await web3.eth.getAccounts();
-            
-            await contract.methods.transferOwnership(
-                propertyId,
-                previousOwner,
-                newOwner
-            ).send({ from: accounts[0] })
-            .on('transactionHash', function(hash) {
-                showAlert(`Transaction sent! Hash: ${hash.substring(0, 10)}...`, 'info');
-            })
-            .on('receipt', function(receipt) {
-                showAlert('Ownership transferred successfully!', 'success');
-                document.getElementById("status").innerText = "Ownership transferred successfully!";
-                document.getElementById("status").className = "status-connected";
-                document.getElementById('transferOwnershipForm').reset();
-            })
-            .on('error', function(error) {
-                showAlert(`Error: ${error.message}`, 'error');
-                document.getElementById("status").innerText = "Error during ownership transfer";
-                document.getElementById("status").className = "status-error";
-            });
+
+            await contract.methods
+                .transferOwnership(propertyId, previousOwner, newOwner)
+                .send({ from: accounts[0] })
+                .on('transactionHash', function (hash) {
+                    showAlert('Submitted. Tx: ' + hash.substring(0, 12) + '…', 'info');
+                })
+                .on('receipt', function () {
+                    showAlert('Ownership transferred successfully.', 'success');
+                    var st = document.getElementById('walletStatus');
+                    if (st && accounts[0]) {
+                        st.innerHTML = 'Connected: <span class="contract-address">' + accounts[0] + '</span>';
+                        st.className = 'admin-page-status is-success';
+                    }
+                    form.reset();
+                })
+                .on('error', function (error) {
+                    showAlert(error && error.message ? error.message : 'Transaction failed.', 'error');
+                    var st = document.getElementById('walletStatus');
+                    if (st && accounts[0]) {
+                        st.innerHTML = 'Connected: <span class="contract-address">' + accounts[0] + '</span>';
+                        st.className = 'admin-page-status is-warning';
+                    }
+                });
         } catch (error) {
-            showAlert(`Error: ${error.message}`, 'error');
-            document.getElementById("status").innerText = "Error during ownership transfer";
-            document.getElementById("status").className = "status-error";
-            console.error(error);
+            showAlert(error && error.message ? error.message : String(error), 'error');
+            var st2 = document.getElementById('walletStatus');
+            if (st2 && typeof web3 !== 'undefined') {
+                web3.eth.getAccounts().then(function (accs) {
+                    if (accs && accs[0]) {
+                        st2.innerHTML = 'Connected: <span class="contract-address">' + accs[0] + '</span>';
+                        st2.className = 'admin-page-status is-error';
+                    }
+                }).catch(function () {});
+            }
         }
     });
-
-    // Optional: Additional event listeners for property registration or authorization management
-    document.getElementById('registerPropertyForm')?.addEventListener('submit', async (event) => {
-        event.preventDefault();
-
-        const owner = document.getElementById('owner').value;
-        const description = document.getElementById('description').value;
-        const latitude = document.getElementById('latitude').value;
-        const longitude = document.getElementById('longitude').value;
-
-        try {
-            const accounts = await web3.eth.getAccounts();
-            await contract.methods.registerProperty(
-                owner,
-                description,
-                latitude,
-                longitude
-            ).send({ from: accounts[0] });
-
-            document.getElementById("status").innerText = "Property registered successfully!";
-        } catch (error) {
-            console.error(error);
-            document.getElementById("status").innerText = "Error during property registration.";
-        }
-    });
+})();
 </script>
-</section>

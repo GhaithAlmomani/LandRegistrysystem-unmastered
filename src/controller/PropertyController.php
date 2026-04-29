@@ -31,7 +31,10 @@ class PropertyController extends Controller
             $apartmentCount = 0;
 
             foreach ($ownedProperties as $property) {
-                $propertyType = (empty($property['apartment_number']) || $property['apartment_number'] === '-') ? 'land' : 'apartment';
+                $propertyType = strtolower((string)($property['type'] ?? ''));
+                if ($propertyType === '') {
+                    $propertyType = (empty($property['apartment_number']) || $property['apartment_number'] === '-') ? 'land' : 'apartment';
+                }
                 if ($propertyType === 'land') {
                     $landCount++;
                 } else {

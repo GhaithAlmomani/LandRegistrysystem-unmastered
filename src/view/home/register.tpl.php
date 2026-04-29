@@ -1,41 +1,69 @@
 <?php
 ?>
 
-<section class="form-container">
-    <?php if ($error_message): ?>
-        <div class="error-message" style="color: red; margin-bottom: 15px; padding: 10px; background-color: #ffebee; border: 1px solid #ffcdd2; border-radius: 4px;">
-            <?php echo htmlspecialchars($error_message); ?>
-        </div>
-    <?php endif; ?>
+<section class="form-container register-page" aria-labelledby="register-heading">
+    <div class="register-page-shell">
+        <a href="<?= htmlspecialchars(url('')) ?>" class="register-page-back">
+            <i class="fas fa-arrow-left" aria-hidden="true"></i>
+            <span>Back to home</span>
+        </a>
 
-    <form action="" method="post" enctype="multipart/form-data">
-        <h3>Register as User</h3>
-        <p>Full name <span>*</span></p>
-        <input type="text" name="name" placeholder="Enter your full name" required maxlength="50" class="box" value="<?php echo isset($_POST['name']) ? htmlspecialchars($_POST['name']) : ''; ?>">
-        
-        <p>Username <span>*</span></p>
-        <input type="text" name="username" placeholder="Enter your username" required minlength="8" maxlength="50" class="box" value="<?php echo isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>">
-        
-        <p>Email address<span>*</span></p>
-        <input type="email" name="email" placeholder="Enter your email address" required maxlength="50" class="box" value="<?php echo isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>">
-        
-        <p>Password <span>*</span></p>
-        <input type="password" name="pass" placeholder="Enter your password" required minlength="8" maxlength="20" class="box">
-        
-        <p>Confirm password <span>*</span></p>
-        <input type="password" name="c_pass" placeholder="Confirm your password" required minlength="8" maxlength="20" class="box">
+        <form action="" method="post" enctype="multipart/form-data" class="register-form">
+            <header class="register-form-brand">
+                <div class="register-form-brand-icon" aria-hidden="true">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <p class="register-form-eyebrow">Create an account</p>
+                <h3 id="register-heading" class="register-form-title">Register as user</h3>
+                <p class="register-form-lead">Complete the form below to open a portal account with the Department of Land and Survey.</p>
+            </header>
 
-        <p>Phone number <span>*</span></p>
-        <input type="tel" name="phonenumber" placeholder="Enter your phone number" required maxlength="20" class="box" value="<?php echo isset($_POST['phonenumber']) ? htmlspecialchars($_POST['phonenumber']) : ''; ?>">
-        
-        <p>National ID<span>*</span></p>
-        <input type="number" name="ID" placeholder="Enter your ID number" required maxlength="20" class="box" value="<?php echo isset($_POST['ID']) ? htmlspecialchars($_POST['ID']) : ''; ?>">
+            <?php if (!empty($error_message)): ?>
+                <div class="error-message" role="alert">
+                    <?= htmlspecialchars($error_message) ?>
+                </div>
+            <?php endif; ?>
 
-        <input type="submit" value="Register as User" name="submit" class="btn">
+            <div class="register-form-fields">
+                <label class="register-field">
+                    <span class="register-field-label">Full name <span class="register-required" aria-hidden="true">*</span></span>
+                    <input type="text" name="name" placeholder="Enter your full name" required maxlength="50" class="box" autocomplete="name" value="<?= isset($_POST['name']) ? htmlspecialchars((string) $_POST['name']) : '' ?>">
+                </label>
+                <label class="register-field">
+                    <span class="register-field-label">Username <span class="register-required" aria-hidden="true">*</span></span>
+                    <input type="text" name="username" placeholder="Enter your username" required minlength="8" maxlength="50" class="box" autocomplete="username" value="<?= isset($_POST['username']) ? htmlspecialchars((string) $_POST['username']) : '' ?>">
+                </label>
+                <label class="register-field">
+                    <span class="register-field-label">Email address <span class="register-required" aria-hidden="true">*</span></span>
+                    <input type="email" name="email" placeholder="Enter your email address" required maxlength="50" class="box" autocomplete="email" value="<?= isset($_POST['email']) ? htmlspecialchars((string) $_POST['email']) : '' ?>">
+                </label>
+                <label class="register-field">
+                    <span class="register-field-label">Password <span class="register-required" aria-hidden="true">*</span></span>
+                    <input type="password" name="pass" placeholder="Enter your password" required minlength="8" maxlength="20" class="box" autocomplete="new-password">
+                </label>
+                <label class="register-field">
+                    <span class="register-field-label">Confirm password <span class="register-required" aria-hidden="true">*</span></span>
+                    <input type="password" name="c_pass" placeholder="Confirm your password" required minlength="8" maxlength="20" class="box" autocomplete="new-password">
+                </label>
+                <label class="register-field">
+                    <span class="register-field-label">Phone number <span class="register-required" aria-hidden="true">*</span></span>
+                    <input type="tel" name="phonenumber" placeholder="Enter your phone number" required maxlength="20" class="box" autocomplete="tel" value="<?= isset($_POST['phonenumber']) ? htmlspecialchars((string) $_POST['phonenumber']) : '' ?>">
+                </label>
+                <label class="register-field">
+                    <span class="register-field-label">National ID <span class="register-required" aria-hidden="true">*</span></span>
+                    <input type="text" name="ID" placeholder="Enter your ID number" required inputmode="numeric" maxlength="20" class="box" autocomplete="off" value="<?= isset($_POST['ID']) ? htmlspecialchars((string) $_POST['ID']) : '' ?>">
+                </label>
+            </div>
 
-        <section class="box">
-            <h4>Already have an account?</h4>
-            <a href="login" class="btn">login</a>
-        </section>
-    </form>
+            <button type="submit" name="submit" value="1" class="btn register-form-submit">
+                <i class="fas fa-user-check" aria-hidden="true"></i>
+                Register as user
+            </button>
+
+            <section class="box register-form-footer" aria-labelledby="register-login-prompt">
+                <h4 id="register-login-prompt">Already have an account?</h4>
+                <a href="<?= htmlspecialchars(url('login')) ?>" class="btn btn-outline register-form-login">Sign in</a>
+            </section>
+        </form>
+    </div>
 </section>

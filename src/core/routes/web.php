@@ -83,11 +83,15 @@ Router::get('sell', [PropertyController::class, 'sell']);
 
 Router::get('sellReq', [TransferController::class, 'sellReq']);
 Router::post('sellReq', [TransferController::class, 'sellReq']);
+Router::get('myRequests', [TransferController::class, 'myRequests']);
+Router::post('myRequests', [TransferController::class, 'myRequests']);
 
 Router::get('sellRequest', [TransferController::class, 'sellRequest']);
 Router::post('sellRequest', [TransferController::class, 'sellRequest']);
 Router::get('downloadDocument', [TransferController::class, 'downloadDocument']);
 Router::post('downloadDocument', [TransferController::class, 'downloadDocument']);
+Router::get('sellReqReceipt', [TransferController::class, 'sellReqReceipt']);
+Router::get('sellReqTrackingPopup', [TransferController::class, 'sellReqTrackingPopup']);
 
 Router::get('recentTransaction', [UserController::class, 'recentTransaction']);
 
@@ -95,7 +99,14 @@ Router::get('employeePortal', [EmployeeController::class, 'employeePortal']);
 
 Router::get('adminPortal', [AdminController::class, 'adminPortal']);
 
-Router::get('orders', [UserController::class, 'orders']);
+Router::get('adminReports', [AdminController::class, 'adminReports']);
+Router::get('adminReports/download', [AdminController::class, 'adminReportsDownload']);
+Router::get('adminTransferQueue', [AdminController::class, 'adminTransferQueue']);
+Router::get('adminUserSearch', [AdminController::class, 'adminUserSearch']);
+Router::get('adminSystemRecords', [AdminController::class, 'adminSystemRecords']);
+
+Router::get('orders', [TransferController::class, 'myRequests']);
+Router::post('orders', [TransferController::class, 'myRequests']);
 
 // Logout Route
 Router::get('logout', [LogoutController::class, 'index']);

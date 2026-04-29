@@ -105,111 +105,296 @@ class TransferController extends Controller
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             try {
-                $this->requireValidCsrfOrRedirect('/sellReq');
+                $this->requireValidCsrfOrRedirect('sellReq');
 
                 $errors = [];
+
                 [$propertyId, $e] = $this->postInt('property_id', true, 1, null);
-                if ($e) $errors['property_id'][] = $e;
+                if ($e) {
+                    $errors['property_id'][] = $e;
+                }
+
+                // Seller full name + national ID are display-only fields in UI.
+                // We do not trust posted values for these two and force them from DB after loading user record.
+                $sellerFullName = trim((string)($_POST['seller_full_name'] ?? ''));
+                $sellerNationalId = trim((string)($_POST['seller_national_id'] ?? ''));
+
+                [$sellerEmail, $e] = $this->postString('seller_email', 255, true);
+                if ($e) {
+                    $errors['seller_email'][] = $e;
+                }
+                if ($sellerEmail !== null && $sellerEmail !== '' && !filter_var($sellerEmail, FILTER_VALIDATE_EMAIL)) {
+                    $errors['seller_email'][] = 'Enter a valid email address';
+                }
+
+                [$sellerPhone, $e] = $this->postString('seller_phone', 32, true);
+                if ($e) {
+                    $errors['seller_phone'][] = $e;
+                }
 
                 [$buyerName, $e] = $this->postString('buyer_name', 120, true);
-                if ($e) $errors['buyer_name'][] = $e;
+                if ($e) {
+                    $errors['buyer_name'][] = $e;
+                }
 
                 [$buyerNationalId, $e] = $this->postString('buyer_national_id', 32, true);
-                if ($e) $errors['buyer_national_id'][] = $e;
-                if ($buyerNationalId !== null && $buyerNationalId !== '' && !preg_match('/^[0-9]{6,32}$/', $buyerNationalId)) {
-                    $errors['buyer_national_id'][] = 'buyer_national_id must be 6-32 digits';
+                if ($e) {
+                    $errors['buyer_national_id'][] = $e;
+                }
+                if ($buyerNationalId !== null && $buyerNationalId !== '') {
+                    $bd = User::normalizeNationalIdDigits((string)$buyerNationalId);
+                    if (strlen($bd) < 6 || strlen($bd) > 32) {
+                        $errors['buyer_national_id'][] = 'National ID must contain 6–32 digits';
+                    }
+                }
+
+                [$buyerEmail, $e] = $this->postString('buyer_email', 255, true);
+                if ($e) {
+                    $errors['buyer_email'][] = $e;
+                }
+                if ($buyerEmail !== null && $buyerEmail !== '' && !filter_var($buyerEmail, FILTER_VALIDATE_EMAIL)) {
+                    $errors['buyer_email'][] = 'Enter a valid email address';
                 }
 
                 [$buyerPhone, $e] = $this->postString('buyer_phone', 32, true);
-                if ($e) $errors['buyer_phone'][] = $e;
-                if ($buyerPhone !== null && $buyerPhone !== '' && !preg_match('/^[0-9+\-\s()]{7,32}$/', $buyerPhone)) {
-                    $errors['buyer_phone'][] = 'buyer_phone must be a valid phone number';
+                if ($e) {
+                    $errors['buyer_phone'][] = $e;
                 }
 
                 [$buyerAddress, $e] = $this->postString('buyer_address', 255, true);
-                if ($e) $errors['buyer_address'][] = $e;
-
-                if (!empty($errors)) {
-                    $_SESSION['error'] = 'Please correct the highlighted fields and try again.';
-                    $_SESSION['form_errors'] = $errors;
-                    $_SESSION['form_old'] = [
-                        'property_id' => $_POST['property_id'] ?? null,
-                        'buyer_name' => $_POST['buyer_name'] ?? null,
-                        'buyer_national_id' => $_POST['buyer_national_id'] ?? null,
-                        'buyer_phone' => $_POST['buyer_phone'] ?? null,
-                        'buyer_address' => $_POST['buyer_address'] ?? null,
-                    ];
-                    header('Location: /sellReq?error=1');
-                    exit;
+                if ($e) {
+                    $errors['buyer_address'][] = $e;
                 }
 
                 $userData = User::findByUsername($_SESSION['Username']);
-
                 if (!$userData) {
-                    throw new Exception("User not found");
+                    $_SESSION['error'] = 'Your session account could not be loaded.';
+                    header('Location: sellReq?error=1' . ($propertyId ? '&property_id=' . (int)$propertyId : ''));
+                    exit;
+                }
+
+                // Enforce immutable seller identity fields from DB (cannot be edited by client).
+                $sellerFullName = User::registeredFullName($userData);
+                $sellerNationalId = (string)($userData['User_NationalID'] ?? '');
+                if ($sellerFullName === '') {
+                    $errors['seller_full_name'][] = 'Seller name is missing in your account record.';
+                }
+                $sellerNidDigits = User::normalizeNationalIdDigits($sellerNationalId);
+                if ($sellerNidDigits === '' || strlen($sellerNidDigits) < 6 || strlen($sellerNidDigits) > 32) {
+                    $errors['seller_national_id'][] = 'Seller National ID is missing or invalid in your account record.';
+                }
+
+                $sellerErr = User::validateDeclaredIdentityMatchesUser(
+                    $userData,
+                    (string)$sellerFullName,
+                    (string)$sellerNationalId,
+                    (string)$sellerEmail,
+                    (string)$sellerPhone
+                );
+                if ($sellerErr !== null) {
+                    $errors['seller_identity'][] = $sellerErr;
+                }
+
+                $propertyOk = $propertyId !== null && Property::findByIdAndOwner((int)$propertyId, (int)$userData['User_ID']);
+                if (!$propertyOk) {
+                    $errors['property_id'][] = 'You can only file a transfer for a property you own.';
+                } else {
+                    $propStatus = strtolower((string)($propertyOk['status'] ?? ''));
+                    if ($propStatus === Property::STATUS_PENDING_TRANSFER) {
+                        $errors['property_id'][] = 'This property already has a pending transfer request.';
+                    }
+                    $pending = PropertyTransfer::findPendingByProperty((int)$propertyId);
+                    if ($pending) {
+                        $errors['property_id'][] = 'A transfer request is already pending for this property.';
+                    }
+                }
+
+                $buyerRow = User::findByNationalID((string)$buyerNationalId);
+                if (!$buyerRow) {
+                    $errors['buyer_national_id'][] = 'No registered citizen account matches this national ID.';
+                } else {
+                    $buyerErr = User::validateDeclaredIdentityMatchesUser(
+                        $buyerRow,
+                        (string)$buyerName,
+                        (string)$buyerNationalId,
+                        (string)$buyerEmail,
+                        (string)$buyerPhone
+                    );
+                    if ($buyerErr !== null) {
+                        $errors['buyer_identity'][] = $buyerErr;
+                    }
+                    if ((int)$buyerRow['User_ID'] === (int)$userData['User_ID']) {
+                        $errors['buyer_identity'][] = 'Buyer cannot be the same person as the seller.';
+                    }
+                }
+
+                if (!empty($errors)) {
+                    $_SESSION['error'] = 'Declaration does not match civil registry records, or the request is invalid. Please correct the details.';
+                    $_SESSION['form_errors'] = $errors;
+                    $_SESSION['form_old'] = [
+                        'property_id' => $_POST['property_id'] ?? null,
+                        'seller_full_name' => $_POST['seller_full_name'] ?? null,
+                        'seller_national_id' => $_POST['seller_national_id'] ?? null,
+                        'seller_email' => $_POST['seller_email'] ?? null,
+                        'seller_phone' => $_POST['seller_phone'] ?? null,
+                        'buyer_name' => $_POST['buyer_name'] ?? null,
+                        'buyer_national_id' => $_POST['buyer_national_id'] ?? null,
+                        'buyer_email' => $_POST['buyer_email'] ?? null,
+                        'buyer_phone' => $_POST['buyer_phone'] ?? null,
+                        'buyer_address' => $_POST['buyer_address'] ?? null,
+                    ];
+                    header('Location: sellReq?error=1' . ($propertyId ? '&property_id=' . (int)$propertyId : ''));
+                    exit;
                 }
 
                 $trackingNumber = 'TRK-' . strtoupper(bin2hex(random_bytes(6)));
 
                 $con = \Database::getConnection();
                 $con->beginTransaction();
+
+                // Re-check inside the transaction to avoid duplicate pending requests.
+                $propRow = Property::findByIdAndOwner((int)$propertyId, (int)$userData['User_ID']);
+                if (!$propRow) {
+                    throw new Exception('Property not found for this user.');
+                }
+                if (strtolower((string)($propRow['status'] ?? '')) === Property::STATUS_PENDING_TRANSFER) {
+                    throw new Exception('This property already has a pending transfer request.');
+                }
+                $pending = PropertyTransfer::findPendingByProperty((int)$propertyId);
+                if ($pending) {
+                    $tn = (string)($pending['tracking_number'] ?? '');
+                    throw new Exception($tn !== '' ? ("A request is already pending for this property. Tracking: {$tn}") : 'A request is already pending for this property.');
+                }
+
                 PropertyTransfer::create([
                     'property_id' => $propertyId,
                     'seller_id' => (int)$userData['User_ID'],
                     'buyer_name' => $buyerName,
-                    'buyer_national_id' => $buyerNationalId,
+                    'buyer_national_id' => User::normalizeNationalIdDigits((string)$buyerNationalId),
                     'buyer_phone' => $buyerPhone,
+                    'buyer_email' => strtolower(trim((string)$buyerEmail)),
                     'buyer_address' => $buyerAddress,
                     'tracking_number' => $trackingNumber,
                 ]);
                 Property::updateStatus($propertyId, 'pending_transfer', (int)$userData['User_ID']);
                 $con->commit();
 
+                // Generate a filing slip document (request stage) for citizen to present at DLS office.
+                $result = PropertyTransfer::findTransferDetailsForDocument($trackingNumber);
+                if ($result) {
+                    $docGenerator = new \MVC\core\DocumentGenerator();
+                    $docGenerator->generateTransferRequestSlip(
+                        [
+                            'tracking_number' => $trackingNumber,
+                            'created_at' => (string)($result['created_at'] ?? date('Y-m-d H:i:s'))
+                        ],
+                        [
+                            'district_name' => (string)($result['district_name'] ?? ''),
+                            'village' => (string)($result['village'] ?? ''),
+                            'block_name' => (string)($result['block_name'] ?? ''),
+                            'block_number' => (string)($result['block_number'] ?? ''),
+                            'plot_number' => (string)($result['plot_number'] ?? ''),
+                            'type' => (string)($result['type'] ?? 'land'),
+                            'area' => $result['area'] ?? null
+                        ],
+                        [
+                            'name' => (string)($result['User_Name'] ?? ''),
+                            'national_id' => (string)($result['User_NationalID'] ?? ''),
+                            'email' => (string)($result['User_Email'] ?? ''),
+                            'phone' => (string)($result['User_Phone'] ?? '')
+                        ],
+                        [
+                            'buyer_name' => (string)($result['buyer_name'] ?? ''),
+                            'buyer_national_id' => (string)($result['buyer_national_id'] ?? ''),
+                            'buyer_email' => (string)($result['buyer_email'] ?? ''),
+                            'buyer_phone' => (string)($result['buyer_phone'] ?? ''),
+                            'buyer_address' => (string)($result['buyer_address'] ?? '')
+                        ]
+                    );
+
+                    $reqDir = $this->buildStorageAbsolutePath('documents/requests');
+                    if (!file_exists($reqDir)) {
+                        if (!mkdir($reqDir, 0777, true)) {
+                            throw new Exception("Failed to create request documents directory");
+                        }
+                    }
+                    $reqDocAbs = $this->buildStorageAbsolutePath('documents/requests/' . $trackingNumber . '.pdf');
+                    $docGenerator->Output($reqDocAbs, 'F');
+                }
+
                 $_SESSION['tracking_number'] = $trackingNumber;
-                header('Location: /sellReq?success=1');
+                header('Location: sellReq?success=1' . ($propertyId ? '&property_id=' . (int)$propertyId : ''));
                 exit;
             } catch (Exception $e) {
                 if (isset($con)) {
                     $con->rollBack();
                 }
-                $_SESSION['error'] = "Error processing your request: " . $e->getMessage();
-                header('Location: /sellReq?error=1');
+                $_SESSION['error'] = 'Error processing your request: ' . $e->getMessage();
+                $pid = (int)($_POST['property_id'] ?? 0);
+                header('Location: sellReq?error=1' . ($pid ? '&property_id=' . $pid : ''));
                 exit;
             }
         }
 
         // GET request - render the form with seller + property details (no DB access in view).
+        $formErrors = $_SESSION['form_errors'] ?? [];
+        $formOld = $_SESSION['form_old'] ?? [];
+        unset($_SESSION['form_errors'], $_SESSION['form_old']);
+
+        $errorFlash = $_SESSION['error'] ?? null;
+        unset($_SESSION['error']);
+
         $userDetails = null;
         $propertyDetails = null;
         $error = null;
+        $pendingForSeller = null;
 
-        if (isset($_GET['property_id'])) {
+        $propertyIdGet = isset($_GET['property_id']) ? (int)$_GET['property_id'] : (int)($formOld['property_id'] ?? 0);
+
+        if ($propertyIdGet > 0) {
             try {
                 $userDetails = User::findByUsername($_SESSION['Username']);
                 if (!$userDetails) {
                     throw new Exception('User not found');
                 }
-                $propertyId = (int)$_GET['property_id'];
-                $propertyDetails = Property::findByIdAndOwner($propertyId, (int)$userDetails['User_ID']);
+                $propertyDetails = Property::findByIdAndOwner($propertyIdGet, (int)$userDetails['User_ID']);
                 if (!$propertyDetails) {
                     throw new Exception('Property not found for this user');
                 }
+                        $pendingForSeller = PropertyTransfer::findPendingByPropertyAndSeller($propertyIdGet, (int)$userDetails['User_ID']);
             } catch (Exception $e) {
-                $error = "Error loading property details.";
+                $error = 'Unable to load this property. Choose a parcel from “Sell” first.';
             }
         }
 
-        return $this->render('home.User.sellReq', compact('userDetails', 'propertyDetails', 'error'));
+        $trackingFlash = null;
+        if (!empty($_GET['success']) && isset($_SESSION['tracking_number'])) {
+            $trackingFlash = (string)$_SESSION['tracking_number'];
+            unset($_SESSION['tracking_number']);
+        }
+
+        return $this->render('home.User.sellReq', compact(
+            'userDetails',
+            'propertyDetails',
+            'error',
+            'formErrors',
+            'formOld',
+            'errorFlash',
+            'trackingFlash',
+            'pendingForSeller'
+        ));
     }
 
     public function sellRequest(): bool|array|string
     {
-        AuthMiddleware::requireEmployee();
+        AuthMiddleware::requireStaff();
 
         try {
             $con = \Database::getConnection();
 
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                // Only employees can approve/reject transfer requests.
+                AuthMiddleware::requireEmployee();
                 $con->beginTransaction();
 
                 $transfer = PropertyTransfer::findByTracking((string)($_POST['tracking_number'] ?? ''));
@@ -245,7 +430,8 @@ class TransferController extends Controller
                             'block_name' => $result['block_name'],
                             'plot_number' => $result['plot_number'],
                             'block_number' => $result['block_number'],
-                            'apartment_number' => $result['apartment_number']
+                            'type' => $result['type'] ?? 'land',
+                            'area' => $result['area'] ?? null
                         ];
 
                         $sellerDetails = [
@@ -259,6 +445,7 @@ class TransferController extends Controller
                             'buyer_name' => $result['buyer_name'],
                             'buyer_national_id' => $result['buyer_national_id'],
                             'buyer_phone' => $result['buyer_phone'],
+                            'buyer_email' => $result['buyer_email'] ?? '',
                             'buyer_address' => $result['buyer_address']
                         ];
 
@@ -325,7 +512,8 @@ class TransferController extends Controller
                         'block_name' => $result['block_name'],
                         'plot_number' => $result['plot_number'],
                         'block_number' => $result['block_number'],
-                        'apartment_number' => $result['apartment_number']
+                        'type' => $result['type'] ?? 'land',
+                        'area' => $result['area'] ?? null
                     ];
 
                     $sellerDetails = [
@@ -393,6 +581,151 @@ class TransferController extends Controller
             header('Location: sellRequest');
             exit;
         }
+    }
+
+    public function sellReqReceipt(): void
+    {
+        AuthMiddleware::requireLogin();
+
+        try {
+            $trackingNumber = (string)($_GET['tracking_number'] ?? '');
+            if ($trackingNumber === '') {
+                throw new Exception('Tracking number is required');
+            }
+
+            $userData = User::findByUsername((string)($_SESSION['Username'] ?? ''));
+            if (!$userData) {
+                throw new Exception('User account not found');
+            }
+
+            $isStaff = isset($_SESSION['role']) && (
+                (int)$_SESSION['role'] === AuthMiddleware::ROLE_EMPLOYEE ||
+                (int)$_SESSION['role'] === AuthMiddleware::ROLE_ADMIN
+            );
+
+            if (!$isStaff) {
+                $ownedReq = PropertyTransfer::findByTrackingAndSeller($trackingNumber, (int)$userData['User_ID']);
+                if (!$ownedReq) {
+                    throw new Exception('You are not allowed to access this receipt');
+                }
+            }
+
+            $relative = 'documents/requests/' . $trackingNumber . '.pdf';
+            $abs = $this->resolveStorageAbsolutePathOrFail($relative);
+            $size = filesize($abs);
+            if ($size === 0) {
+                throw new Exception('Receipt file is empty');
+            }
+
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="transfer_request_' . $trackingNumber . '.pdf"');
+            header('Content-Length: ' . $size);
+            header('Cache-Control: private, max-age=0, must-revalidate');
+            header('Pragma: public');
+            if (ob_get_level()) {
+                ob_end_clean();
+            }
+            readfile($abs);
+            exit;
+        } catch (Exception $e) {
+            $_SESSION['error'] = 'Error displaying request receipt: ' . $e->getMessage();
+            header('Location: sellReq');
+            exit;
+        }
+    }
+
+    public function sellReqTrackingPopup(): bool|array|string
+    {
+        AuthMiddleware::requireLogin();
+
+        $trackingNumber = (string)($_GET['tracking_number'] ?? '');
+        if ($trackingNumber === '') {
+            $_SESSION['error'] = 'Tracking number is required.';
+            header('Location: sellReq');
+            exit;
+        }
+
+        $userData = User::findByUsername((string)($_SESSION['Username'] ?? ''));
+        if (!$userData) {
+            $_SESSION['error'] = 'User account not found.';
+            header('Location: sellReq');
+            exit;
+        }
+
+        $isStaff = isset($_SESSION['role']) && (
+            (int)$_SESSION['role'] === AuthMiddleware::ROLE_EMPLOYEE ||
+            (int)$_SESSION['role'] === AuthMiddleware::ROLE_ADMIN
+        );
+        if (!$isStaff) {
+            $ownedReq = PropertyTransfer::findByTrackingAndSeller($trackingNumber, (int)$userData['User_ID']);
+            if (!$ownedReq) {
+                $_SESSION['error'] = 'You are not allowed to view this tracking receipt.';
+                header('Location: sellReq');
+                exit;
+            }
+        }
+
+        return $this->render('home.User.sellReqTrackingPopup', [
+            'trackingNumber' => $trackingNumber
+        ]);
+    }
+
+    public function myRequests(): bool|array|string
+    {
+        AuthMiddleware::requireUser();
+
+        $userData = User::findByUsername((string)($_SESSION['Username'] ?? ''));
+        if (!$userData) {
+            $_SESSION['error'] = 'User account not found.';
+            header('Location: home');
+            exit;
+        }
+
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            try {
+                $this->requireValidCsrfOrRedirect('myRequests');
+                $trackingNumber = trim((string)($_POST['tracking_number'] ?? ''));
+                if ($trackingNumber === '') {
+                    throw new Exception('Tracking number is required.');
+                }
+
+                $con = \Database::getConnection();
+                $con->beginTransaction();
+
+                $transfer = PropertyTransfer::findByTrackingAndSeller($trackingNumber, (int)$userData['User_ID']);
+                if (!$transfer) {
+                    throw new Exception('Request not found for your account.');
+                }
+
+                $ok = PropertyTransfer::cancelBySellerWithin24Hours($trackingNumber, (int)$userData['User_ID']);
+                if (!$ok) {
+                    throw new Exception('Cancellation is only available for pending requests filed within 24 hours.');
+                }
+
+                Property::updateStatus((int)$transfer['property_id'], 'active', (int)$userData['User_ID']);
+                $con->commit();
+
+                $_SESSION['success'] = 'Request cancelled successfully.';
+            } catch (Exception $e) {
+                if (isset($con) && $con->inTransaction()) {
+                    $con->rollBack();
+                }
+                $_SESSION['error'] = $e->getMessage();
+            }
+            header('Location: myRequests');
+            exit;
+        }
+
+        $requests = PropertyTransfer::findForSeller((int)$userData['User_ID'], 150);
+        $successFlash = $_SESSION['success'] ?? null;
+        $errorFlash = $_SESSION['error'] ?? null;
+        unset($_SESSION['success'], $_SESSION['error']);
+
+        return $this->render('home.User.myRequests', [
+            'requests' => $requests,
+            'successFlash' => $successFlash,
+            'errorFlash' => $errorFlash
+        ]);
     }
 }
 

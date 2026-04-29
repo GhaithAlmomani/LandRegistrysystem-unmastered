@@ -3,31 +3,30 @@ require_once __DIR__ . '/../../../../src/middleware/AuthMiddleware.php';
 use MVC\middleware\AuthMiddleware;
 
 // Ensure only employees or admins can access this page
-if (!isset($_SESSION['Username'])) {
-    header('Location: /login');
-    exit();
-}
-if (!isset($_SESSION['role']) || ($_SESSION['role'] != \MVC\middleware\AuthMiddleware::ROLE_EMPLOYEE && $_SESSION['role'] != \MVC\middleware\AuthMiddleware::ROLE_ADMIN)) {
-    header('Location: /home');
-    exit();
-}
-
-require_once __DIR__ . '/../../layouts/navbar.tpl.php';
+AuthMiddleware::requireStaff();
 ?>
 
-<section class="container">
-    <div class="scanner-container" style="background-color: var(--white); border-radius: .5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 60rem; margin: 0 auto;">
-        <h3 style="font-size: 2.5rem; color: var(--black); margin-bottom: 2.5rem; border-bottom: var(--border); padding-bottom: 1.5rem; text-transform: capitalize;">QR Code Scanner</h3>
+<section class="admin-page">
+    <h1 class="heading">QR Code Scanner</h1>
 
-        <button id="startButton" class="btn" style="width: auto; display: inline-block; margin: 1rem auto;">Loading...</button>
+    <div class="card admin-page-card">
+        <h3 class="title">Capture Address from QR</h3>
+        <p class="tutor">Scan a QR code to capture and copy a wallet address quickly and accurately.</p>
 
-        <video id="video" style="display: none; margin: 1rem 0; max-width: 100%; border-radius: .5rem;"></video>
-        <canvas id="canvas" style="display: none;"></canvas>
+        <div class="admin-page-actions">
+            <button id="startButton" class="inline-btn" type="button">Loading...</button>
+            <button id="copyButton" class="inline-btn" type="button" hidden onclick="copyQRContent()">
+                <i class="fa-regular fa-copy" aria-hidden="true"></i>
+                Copy Result
+            </button>
+        </div>
 
-        <div id="output" style="margin-top: 2rem; padding: 1.5rem; border: var(--border); border-radius: .5rem; background-color: var(--light-bg); font-size: 1.8rem; color: var(--light-color);">
+        <video id="video" hidden></video>
+        <canvas id="canvas" hidden></canvas>
+
+        <div id="output" class="admin-page-status" aria-live="polite">
             QR content will appear here
         </div>
-        <button id="copyButton" class="btn" style="display: none; margin-top: 1rem;" onclick="copyQRContent()">Copy Result</button>
     </div>
 </section>
 
@@ -42,6 +41,10 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
     const copyButton = document.getElementById('copyButton');
     let scanning = false;
     let qrContent = '';
+    const qs = new URLSearchParams(window.location.search);
+    const returnTo = qs.get('return'); // e.g. setEmpAuth
+    const field = qs.get('field') || 'employeeAddress';
+    const autostart = qs.get('autostart') === '1';
 
     function copyQRContent() {
         if (qrContent) {
@@ -69,6 +72,14 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
         } else {
             output.textContent = 'Error: QR scanner failed to load. Please refresh the page.';
         }
+
+        // Try to start camera immediately when launched from Set Authorization.
+        // Some browsers require a user gesture; if blocked, the user can press the button.
+        if (autostart) {
+            setTimeout(() => {
+                try { startButton.click(); } catch (e) {}
+            }, 250);
+        }
     });
 
     startButton.addEventListener('click', () => {
@@ -90,10 +101,10 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
             .then(function(stream) {
                 scanning = true;
                 startButton.textContent = 'Stop Scanning';
-                startButton.className = 'delete-btn';
+                startButton.className = 'inline-btn';
                 video.srcObject = stream;
                 video.setAttribute('playsinline', true);
-                video.style.display = 'block';
+                video.hidden = false;
                 video.play()
                     .then(() => {
                         requestAnimationFrame(tick);
@@ -101,15 +112,15 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
             })
             .catch(function(err) {
                 output.textContent = 'Error accessing camera. Please make sure you have granted camera permissions.';
-                output.style.color = 'var(--red)';
+                output.className = 'admin-page-status is-error';
             });
     }
 
     function stopScanning() {
         scanning = false;
-        startButton.textContent = 'Start Scanning';
-        startButton.className = 'btn';
-        video.style.display = 'none';
+        startButton.textContent = 'Scan QR Code';
+        startButton.className = 'inline-btn';
+        video.hidden = true;
         if (video.srcObject) {
             video.srcObject.getTracks().forEach(track => track.stop());
         }
@@ -130,13 +141,19 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
                 if (code) {
                     qrContent = code.data;
                     output.textContent = `QR Code Content: ${qrContent}`;
-                    output.style.color = 'var(--main-color)';
-                    copyButton.style.display = 'inline-block';
+                    output.className = 'admin-page-status is-success';
+                    copyButton.hidden = false;
                     stopScanning();
+
+                    // If this scanner was opened from Set Employee Authorization, return the result.
+                    if (returnTo === 'setEmpAuth') {
+                        const addr = encodeURIComponent(qrContent);
+                        window.location.href = `setEmpAuth?employeeAddress=${addr}`;
+                    }
                 }
             } catch (err) {
                 output.textContent = 'Error scanning QR code. Please try again.';
-                output.style.color = 'var(--red)';
+                output.className = 'admin-page-status is-error';
             }
 
             if (scanning) {

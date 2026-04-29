@@ -16,18 +16,18 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
 ?>
 
 <section class="container">
-    <div class="scanner-container" style="background-color: var(--white); border-radius: .5rem; padding: 2rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1); max-width: 60rem; margin: 0 auto;">
-        <h3 style="font-size: 2.5rem; color: var(--black); margin-bottom: 2.5rem; border-bottom: var(--border); padding-bottom: 1.5rem; text-transform: capitalize;">QR Code Scanner</h3>
+    <div class="scanner-container">
+        <h3>QR Code Scanner</h3>
 
-        <button id="startButton" class="btn" style="width: auto; display: inline-block; margin: 1rem auto;">Loading...</button>
+        <button id="startButton" class="btn">Loading...</button>
 
-        <video id="video" style="display: none; margin: 1rem 0; max-width: 100%; border-radius: .5rem;"></video>
-        <canvas id="canvas" style="display: none;"></canvas>
+        <video id="video" hidden></video>
+        <canvas id="canvas" hidden></canvas>
 
-        <div id="output" style="margin-top: 2rem; padding: 1.5rem; border: var(--border); border-radius: .5rem; background-color: var(--light-bg); font-size: 1.8rem; color: var(--light-color);">
+        <div id="output">
             QR content will appear here
         </div>
-        <button id="copyButton" class="btn" style="display: none; margin-top: 1rem;" onclick="copyQRContent()">Copy Result</button>
+        <button id="copyButton" class="btn" hidden onclick="copyQRContent()">Copy Result</button>
     </div>
 </section>
 
@@ -93,7 +93,7 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
                 startButton.className = 'delete-btn';
                 video.srcObject = stream;
                 video.setAttribute('playsinline', true);
-                video.style.display = 'block';
+                video.hidden = false;
                 video.play()
                     .then(() => {
                         requestAnimationFrame(tick);
@@ -109,7 +109,7 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
         scanning = false;
         startButton.textContent = 'Start Scanning';
         startButton.className = 'btn';
-        video.style.display = 'none';
+        video.hidden = true;
         if (video.srcObject) {
             video.srcObject.getTracks().forEach(track => track.stop());
         }
@@ -131,7 +131,7 @@ require_once __DIR__ . '/../../layouts/navbar.tpl.php';
                     qrContent = code.data;
                     output.textContent = `QR Code Content: ${qrContent}`;
                     output.style.color = 'var(--main-color)';
-                    copyButton.style.display = 'inline-block';
+                    copyButton.hidden = false;
                     stopScanning();
                 }
             } catch (err) {

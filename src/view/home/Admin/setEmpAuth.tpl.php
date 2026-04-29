@@ -1,111 +1,66 @@
 <section>
-    <h1 class="heading">Admin Portal</h1>
+    <h1 class="heading">Employee Authorization</h1>
 
-<style>
-    /* Form Container */
-    #authorizationForm {
-        background-color: var(--white);
-        border-radius: .5rem;
-        padding: 2rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        margin: 2rem auto; /* Center the form */
-        max-width: 600px; /* Set a max width for the form */
-    }
+    <div class="card admin-page-card">
+        <h3 class="title">Set Authorization</h3>
+        <p class="tutor">Grant or revoke employee permissions using the verified blockchain address.</p>
 
-    /* Form Labels */
-    .form-label {
-        font-size: 1.8rem; /* Font size for labels */
-        color: var(--black); /* Label color */
-        margin-bottom: 1rem; /* Space below the label */
-        display: block; /* Ensure labels are block elements */
-    }
+        <?php
+        $prefillEmployeeAddress = isset($_GET['employeeAddress']) ? trim((string)$_GET['employeeAddress']) : '';
+        ?>
 
-    /* Form Inputs */
-    .form-control {
-        width: 100%; /* Full width */
-        padding: 1.2rem; /* Padding inside the input */
-        font-size: 1.6rem; /* Font size for input text */
-        border: var(--border); /* Border style */
-        border-radius: .5rem; /* Rounded corners */
-        background-color: var(--light-bg); /* Background color */
-        color: var(--black); /* Text color */
-        margin-bottom: 1.5rem; /* Space below each input */
-        transition: border-color 0.3s; /* Smooth transition for border color */
-    }
+        <form id="authorizationForm" class="admin-page-form">
+            <label class="admin-page-label" for="employeeAddress">Employee Address</label>
+            <div class="admin-input-with-action">
+                <input type="text" class="box" id="employeeAddress" placeholder="0x..." required value="<?= htmlspecialchars($prefillEmployeeAddress) ?>">
+                <button type="button" class="admin-input-action-btn" id="scanQrBtn" aria-label="Scan QR code">
+                    <i class="fa-solid fa-qrcode" aria-hidden="true"></i>
+                </button>
+            </div>
+            <p class="admin-page-help">Paste the employee wallet address exactly as provided.</p>
 
-    /* Input Focus State */
-    .form-control:focus {
-        border-color: var(--main-color); /* Change border color on focus */
-        outline: none; /* Remove default outline */
-    }
+            <label class="admin-page-label" for="isAuthorized">Authorization</label>
+            <select id="isAuthorized" class="box" required>
+                <option value="true">Authorized</option>
+                <option value="false">Not authorized</option>
+            </select>
 
-    /* Select Dropdown */
-    .form-select {
-        width: 100%; /* Full width */
-        padding: 1.2rem; /* Padding inside the select */
-        font-size: 1.6rem; /* Font size for select text */
-        border: var(--border); /* Border style */
-        border-radius: .5rem; /* Rounded corners */
-        background-color: var(--light-bg); /* Background color */
-        color: var(--black); /* Text color */
-        margin-bottom: 1.5rem; /* Space below select */
-        transition: border-color 0.3s; /* Smooth transition for border color */
-    }
+            <div class="admin-page-actions">
+                <button type="submit" class="inline-btn">
+                    <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+                    Save Authorization
+                </button>
+            </div>
 
-    /* Help Text */
-    .form-text {
-        font-size: 1.4rem; /* Help text font size */
-        color: var(--light-color); /* Help text color */
-        margin-top: .5rem; /* Space above help text */
-    }
-
-    /* Button Styling */
-    .btn-primary {
-        background-color: var(--main-color); /* Button background color */
-        color: var(--white); /* Button text color */
-        font-size: 1.8rem; /* Button font size */
-        padding: 1rem 2rem; /* Padding for the button */
-        border-radius: .5rem; /* Rounded corners */
-        cursor: pointer; /* Pointer cursor on hover */
-        transition: background-color 0.3s; /* Smooth transition for background color */
-    }
-
-    /* Button Hover State */
-    .btn-primary:hover {
-        background-color: var(--black); /* Change background color on hover */
-    }
-
-    /* Status Message */
-    #status {
-        font-size: 1.6rem; /* Status message font size */
-        color: var(--light-color); /* Status message color */
-        margin-top: 1rem; /* Space above status message */
-        text-align: center; /* Center align status message */
-    }
-</style>
-<form id="authorizationForm">
-    <h1 class="heading">Set Employee Authorization</h1>
-
-
-    <div class="mb-3">
-        <label for="employeeAddress" class="form-label">Employee Address</label>
-        <input type="text" class="form-control" id="employeeAddress" aria-describedby="employeeAddressHelp" required>
-        <div id="employeeAddressHelp" class="form-text">Enter The Employee Address</div>
+            <div id="status" class="admin-page-status" aria-live="polite"></div>
+        </form>
     </div>
-    <select id="isAuthorized" class="form-select" aria-label="Default select example" required>
-        <option value="true">True</option>
-        <option value="false">False</option>
-    </select><br><br>
 
-    <!-- <button type="submit">Submit</button> -->
-    <button type="submit" class="btn btn-primary">Set Employee Authorization</button>
+    <div class="card admin-page-card admin-qr-inline" id="qrInline" hidden>
+        <h3 class="title">Scan QR Code</h3>
+        <p class="tutor">Point the camera at the QR code. The result will be pasted into Employee Address automatically.</p>
 
-    <p id="status"></p>
-</form>
+        <div class="admin-page-actions">
+            <button type="button" class="inline-btn" id="startInlineScanBtn">
+                <i class="fa-solid fa-camera" aria-hidden="true"></i>
+                Start Camera
+            </button>
+            <button type="button" class="inline-btn" id="stopInlineScanBtn" disabled>
+                <i class="fa-solid fa-circle-stop" aria-hidden="true"></i>
+                Stop
+            </button>
+        </div>
+
+        <video id="inlineVideo" hidden playsinline></video>
+        <canvas id="inlineCanvas" hidden></canvas>
+
+        <div id="inlineOutput" class="admin-page-status" aria-live="polite">Ready to scan.</div>
+    </div>
 
 
 <!--<p id="status"></p> -->
 
+<script src="https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"></script>
 <script>
 
     // Initialize Web3
@@ -122,24 +77,125 @@
         document.getElementById('authorizationForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const employeeAddress = document.getElementById('employeeAddress').value;
+            const employeeAddress = document.getElementById('employeeAddress').value.trim();
             const isAuthorized = document.getElementById('isAuthorized').value === 'true';
+            const statusEl = document.getElementById('status');
+            statusEl.className = 'admin-page-status';
+            statusEl.textContent = 'Submitting transaction...';
 
             try {
+                if (!employeeAddress || !employeeAddress.startsWith('0x') || employeeAddress.length < 10) {
+                    statusEl.classList.add('is-warning');
+                    statusEl.textContent = 'Please enter a valid wallet address.';
+                    return;
+                }
+
                 const accounts = await web3.eth.getAccounts();
                 const sender = accounts[0];
 
                 // Call the setEmployeeAuthorization function
                 await contract.methods.setEmployeeAuthorization(employeeAddress, isAuthorized).send({ from: sender });
 
-                document.getElementById('status').textContent = "Authorization updated successfully!";
+                statusEl.classList.add('is-success');
+                statusEl.textContent = "Authorization updated successfully.";
             } catch (error) {
                 console.error(error);
-                document.getElementById('status').textContent = "Error: " + error.message;
+                statusEl.classList.add('is-error');
+                statusEl.textContent = "Error: " + (error?.message ?? 'Transaction failed');
             }
         });
     } else {
-        document.getElementById('status').textContent = "Please install MetaMask to use this feature.";
+        const statusEl = document.getElementById('status');
+        statusEl.className = 'admin-page-status is-error';
+        statusEl.textContent = "MetaMask is required to use this feature.";
     }
+
+    // Inline QR scanning (fills Employee Address on success)
+    const qrInline = document.getElementById('qrInline');
+    const scanQrBtn = document.getElementById('scanQrBtn');
+    const startInlineScanBtn = document.getElementById('startInlineScanBtn');
+    const stopInlineScanBtn = document.getElementById('stopInlineScanBtn');
+    const inlineVideo = document.getElementById('inlineVideo');
+    const inlineCanvas = document.getElementById('inlineCanvas');
+    const inlineCtx = inlineCanvas.getContext('2d');
+    const inlineOutput = document.getElementById('inlineOutput');
+    const employeeAddressInput = document.getElementById('employeeAddress');
+    let inlineStream = null;
+    let inlineScanning = false;
+
+    function showInlineScanner() {
+        qrInline.hidden = false;
+        qrInline.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function setInlineStatus(text, kind) {
+        inlineOutput.className = 'admin-page-status';
+        if (kind) inlineOutput.classList.add(kind);
+        inlineOutput.textContent = text;
+    }
+
+    async function startInlineScan() {
+        if (inlineScanning) return;
+        if (typeof jsQR === 'undefined') {
+            setInlineStatus('QR scanner failed to load. Please refresh the page.', 'is-error');
+            return;
+        }
+
+        try {
+            inlineStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } }
+            });
+            inlineScanning = true;
+            startInlineScanBtn.disabled = true;
+            stopInlineScanBtn.disabled = false;
+            inlineVideo.srcObject = inlineStream;
+            inlineVideo.hidden = false;
+            await inlineVideo.play();
+            setInlineStatus('Scanning…', null);
+            requestAnimationFrame(inlineTick);
+        } catch (err) {
+            setInlineStatus('Camera access denied or unavailable.', 'is-error');
+        }
+    }
+
+    function stopInlineScan() {
+        inlineScanning = false;
+        startInlineScanBtn.disabled = false;
+        stopInlineScanBtn.disabled = true;
+        inlineVideo.hidden = true;
+
+        if (inlineStream) {
+            inlineStream.getTracks().forEach(t => t.stop());
+            inlineStream = null;
+        }
+        setInlineStatus('Stopped.', 'is-warning');
+    }
+
+    function inlineTick() {
+        if (!inlineScanning) return;
+
+        if (inlineVideo.readyState === inlineVideo.HAVE_ENOUGH_DATA) {
+            inlineCanvas.height = inlineVideo.videoHeight;
+            inlineCanvas.width = inlineVideo.videoWidth;
+            inlineCtx.drawImage(inlineVideo, 0, 0, inlineCanvas.width, inlineCanvas.height);
+            const imageData = inlineCtx.getImageData(0, 0, inlineCanvas.width, inlineCanvas.height);
+
+            const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "dontInvert" });
+            if (code && code.data) {
+                const scanned = String(code.data).trim();
+                employeeAddressInput.value = scanned;
+                employeeAddressInput.focus();
+                setInlineStatus('Scanned and pasted into Employee Address.', 'is-success');
+                stopInlineScan();
+                return;
+            }
+        }
+
+        requestAnimationFrame(inlineTick);
+    }
+
+    scanQrBtn.addEventListener('click', () => { showInlineScanner(); startInlineScan(); });
+    startInlineScanBtn.addEventListener('click', startInlineScan);
+    stopInlineScanBtn.addEventListener('click', stopInlineScan);
 </script>
 </section>

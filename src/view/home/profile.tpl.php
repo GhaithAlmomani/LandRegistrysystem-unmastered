@@ -8,59 +8,81 @@ if (!isset($_SESSION['Username'])) {
     exit();
 }
 ?>
-<section class="user-profile">
+<section class="admin-page profile-page">
+    <header class="card profile-hero">
+        <div class="profile-hero__top">
+            <div class="profile-hero__identity">
+                <div class="profile-hero__meta">
+                    <h1 class="heading profile-hero__title"><?= htmlspecialchars((string)($userData['User_FullName'] ?? $userData['User_Name'] ?? 'User')) ?></h1>
+                    <div class="profile-hero__sub">
+                        <span class="status-pill profile-role-pill">
+                            <i class="fa-solid fa-id-badge" aria-hidden="true"></i>
+                            <?= htmlspecialchars(\MVC\middleware\AuthMiddleware::getRoleName($userData['AdminID'] ?? null)) ?>
+                        </span>
+                        <?php if (!empty($userData['User_Email'])): ?>
+                            <span class="profile-hero__hint"><?= htmlspecialchars((string)$userData['User_Email']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
 
-    <h1 class="heading">Your profile</h1>
-
-    <div class="info">
-
-        <div class="user">
-            <img src="<?= htmlspecialchars($userData['User_Avatar'] ?? 'images/pic-6.jpg') ?>" alt="">
-            <h3 class="name"><?= htmlspecialchars($userData['User_FullName']) ?></h3>
-            <p class="role">
-                <?php
-                    echo \MVC\middleware\AuthMiddleware::getRoleName($userData['AdminID']);
-                ?>
-            </p>
-            <a href="update-profile" class="inline-btn">update profile</a>
+            <div class="profile-hero__actions">
+                <a href="update-profile" class="inline-btn">
+                    <i class="fa-solid fa-user-pen" aria-hidden="true"></i>
+                    Update profile
+                </a>
+            </div>
         </div>
 
-        <div class="box-container">
-
-            <div class="box">
-                <div class="flex">
-                    <i class="fa-solid fa-house"></i>
-                    <div>
-                        <span>2</span>
-                        <p>Assets owned</p>
-                    </div>
+        <div class="profile-kpis">
+            <div class="profile-kpi">
+                <div class="profile-kpi__icon"><i class="fa-solid fa-house" aria-hidden="true"></i></div>
+                <div>
+                    <div class="profile-kpi__value"><?= number_format((int)($assetsOwned ?? 0)) ?></div>
+                    <div class="profile-kpi__label">Assets owned</div>
                 </div>
-                <a href="ownedassets" class="inline-btn">View assets</a>
+                <a class="tx-link profile-kpi__link" href="ownedassets">View</a>
             </div>
 
-            <div class="box">
-                <div class="flex">
-                    <i class="fa-solid fa-list-ul"></i>
-                    <div>
-                        <span>3</span>
-                        <p>Orders</p>
-                    </div>
+            <div class="profile-kpi">
+                <div class="profile-kpi__icon"><i class="fa-solid fa-list-ul" aria-hidden="true"></i></div>
+                <div>
+                    <div class="profile-kpi__value"><?= number_format((int)($ordersCount ?? 0)) ?></div>
+                    <div class="profile-kpi__label">Orders</div>
                 </div>
-                <a href="#" class="inline-btn">View orders</a>
+                <a class="tx-link profile-kpi__link" href="orders">View</a>
             </div>
 
-            <div class="box">
-                <div class="flex">
-                    <i class="fa-solid fa-receipt"></i>
-                    <div>
-                        <span>12</span>
-                        <p>Recent transaction</p>
-                    </div>
+            <div class="profile-kpi">
+                <div class="profile-kpi__icon"><i class="fa-solid fa-receipt" aria-hidden="true"></i></div>
+                <div>
+                    <div class="profile-kpi__value">—</div>
+                    <div class="profile-kpi__label">Recent transactions</div>
                 </div>
-                <a href="recentTransaction" class="inline-btn">View transactions</a>
+                <a class="tx-link profile-kpi__link" href="recentTransaction">Open</a>
             </div>
+        </div>
+    </header>
 
+    <div class="card admin-page-card">
+        <h2 class="title" style="margin-top:0;">Account details</h2>
+        <div class="profile-details">
+            <div class="profile-details__row">
+                <div class="profile-details__label">Username</div>
+                <div class="profile-details__value"><?= htmlspecialchars((string)($userData['User_Name'] ?? '—')) ?></div>
+            </div>
+            <div class="profile-details__row">
+                <div class="profile-details__label">National ID</div>
+                <div class="profile-details__value"><?= htmlspecialchars((string)($userData['User_NationalID'] ?? '—')) ?></div>
+            </div>
+            <div class="profile-details__row">
+                <div class="profile-details__label">Phone</div>
+                <div class="profile-details__value"><?= htmlspecialchars((string)($userData['User_Phone'] ?? $userData['Phone'] ?? '—')) ?></div>
+            </div>
+            <div class="profile-details__row">
+                <div class="profile-details__label">Address</div>
+                <div class="profile-details__value"><?= htmlspecialchars((string)($userData['User_Address'] ?? $userData['Address'] ?? '—')) ?></div>
+            </div>
         </div>
     </div>
-
 </section>

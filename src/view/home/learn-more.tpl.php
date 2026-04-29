@@ -1,288 +1,169 @@
-<style>
-    .learn-more {
-        padding: 2rem;
-    }
+<div class="learn-more-page">
+    <h1 class="heading">Guidance &amp; video tutorials</h1>
+    <p class="learn-more-lead">Short walkthroughs on e-services, property sales, documentation, and common questions—aligned with Department of Land and Survey processes.</p>
 
-    .learn-more .page-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
+    <div class="learn-more-toolbar">
+        <form class="learn-more-search" action="<?= htmlspecialchars(url('learn-more')) ?>" method="get" role="search" aria-label="Search tutorials">
+            <label class="visually-hidden" for="tutorial-search">Search tutorials</label>
+            <input type="search" id="tutorial-search" name="q" class="box" placeholder="Search tutorials…" maxlength="100" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>" autocomplete="off">
+            <button type="submit" class="btn learn-more-search-btn" aria-label="Submit search"><i class="fas fa-search" aria-hidden="true"></i></button>
+        </form>
+    </div>
 
-    .learn-more .category-tabs {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 2rem;
-        flex-wrap: wrap;
-    }
-
-    .learn-more .category-tab {
-        padding: 1rem 2rem;
-        background: var(--white);
-        border-radius: 0.5rem;
-        cursor: pointer;
-        font-size: 1.4rem;
-        transition: all 0.3s ease;
-        border: 1px solid #ddd;
-    }
-
-    .learn-more .category-tab.active,
-    .learn-more .category-tab:hover {
-        background: var(--main-color);
-        color: white;
-        border-color: var(--main-color);
-    }
-
-    .learn-more .search-video {
-        margin-bottom: 2rem;
-        border-radius: .5rem;
-        background-color: var(--white);
-        padding: 1.5rem 2rem;
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    }
-
-    .learn-more .search-video input {
-        width: 100%;
-        background: none;
-        font-size: 1.8rem;
-        color: var(--black);
-        padding: 1rem;
-        border: 1px solid #ddd;
-        border-radius: 0.5rem;
-    }
-
-    .learn-more .search-video input:focus {
-        border-color: var(--main-color);
-        outline: none;
-    }
-
-    .learn-more .search-video button {
-        font-size: 2rem;
-        color: var(--black);
-        cursor: pointer;
-        background: none;
-        padding: 1rem;
-        border-radius: 0.5rem;
-        transition: all 0.3s ease;
-    }
-
-    .learn-more .search-video button:hover {
-        color: var(--main-color);
-        background: #f8f9fa;
-    }
-
-    .learn-more .box-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(30rem, 1fr));
-        gap: 1.5rem;
-        justify-content: center;
-        align-items: flex-start;
-    }
-
-    .learn-more .box-container .box {
-        background-color: var(--white);
-        border-radius: .5rem;
-        padding: 2rem;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-    }
-
-    .learn-more .box-container .box:hover {
-        transform: translateY(-5px);
-    }
-
-    .learn-more .box-container .box .video,
-    .learn-more .box-container .box .tutor {
-        display: flex;
-        align-items: center;
-        gap: 2rem;
-        margin-bottom: 1.5rem;
-    }
-
-    .learn-more .box-container .box .video h3,
-    .learn-more .box-container .box .tutor h3 {
-        font-size: 2rem;
-        color: var(--black);
-        margin-bottom: .2rem;
-    }
-
-    .learn-more .box-container .box .video span,
-    .learn-more .box-container .box .tutor span {
-        font-size: 1.6rem;
-        color: var(--light-color);
-    }
-
-    .learn-more .box-container .box p {
-        padding: .5rem 0;
-        font-size: 1.7rem;
-        color: var(--light-color);
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .learn-more .box-container .box p span {
-        color: var(--main-color);
-        font-weight: bold;
-    }
-
-    .learn-more .box-container .box .video-info {
-        display: flex;
-        align-items: center;
-        gap: 1.5rem;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        border-top: 1px solid #eee;
-    }
-
-    .learn-more .box-container .box .video-info .duration {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: var(--light-color);
-        font-size: 1.4rem;
-    }
-
-    .learn-more .box-container .box a {
-        display: inline-block;
-        background-color: var(--main-color);
-        border-radius: .5rem;
-        padding: 1rem 1.5rem;
-        font-size: 1.8rem;
-        color: var(--white);
-        text-align: center;
-        margin-top: 1rem;
-        text-transform: capitalize;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        width: 100%;
-    }
-
-    .learn-more .box-container .box a:hover {
-        background-color: #004408;
-        transform: translateY(-2px);
-    }
-
-    .learn-more .featured-section {
-        margin-bottom: 3rem;
-    }
-
-    .learn-more .featured-section h2 {
-        font-size: 2rem;
-        color: var(--black);
-        margin-bottom: 1.5rem;
-    }
-</style>
-
-<section class="learn-more">
-    <div class="page-header">
-        <h1 class="heading">Video Tutorials</h1>
-        <div class="search-video">
-            <input type="text" name="search_box" placeholder="Search tutorials..." required maxlength="100">
-            <button type="submit" class="fas fa-search" name="search_tutor"></button>
+    <div class="learn-more-tabs-wrap">
+        <div class="learn-more-tabs" role="tablist" aria-label="Tutorial categories">
+            <button type="button" class="learn-more-tab active" role="tab" aria-selected="true" data-filter="all">All</button>
+            <button type="button" class="learn-more-tab" role="tab" aria-selected="false" data-filter="sales">Property sales</button>
+            <button type="button" class="learn-more-tab" role="tab" aria-selected="false" data-filter="egov">E-government</button>
+            <button type="button" class="learn-more-tab" role="tab" aria-selected="false" data-filter="docs">Documentation</button>
+            <button type="button" class="learn-more-tab" role="tab" aria-selected="false" data-filter="faq">FAQs</button>
         </div>
     </div>
 
-    <div class="category-tabs">
-        <div class="category-tab active">All Tutorials</div>
-        <div class="category-tab">Property Sales</div>
-        <div class="category-tab">E-Government</div>
-        <div class="category-tab">Documentation</div>
-        <div class="category-tab">FAQs</div>
-    </div>
+    <section class="learn-more-section" aria-labelledby="featured-heading">
+        <h2 class="heading" id="featured-heading">Featured tutorials</h2>
+        <p class="learn-more-section-intro">Curated entries for getting started with digital services.</p>
+        <div class="learn-more-grid">
+            <article class="learn-more-card" data-category="sales">
+                <a class="learn-more-card-thumb" href="<?= htmlspecialchars(url('watch-video')) ?>" aria-hidden="true" tabindex="-1">
+                    <span class="learn-more-card-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                </a>
+                <div class="learn-more-card-body">
+                    <h3 class="learn-more-card-title"><a href="<?= htmlspecialchars(url('watch-video')) ?>">How to apply for e-sell property</a></h3>
+                    <p class="learn-more-card-sub">Step-by-step guide</p>
+                    <div class="learn-more-meta">
+                        <span><i class="fas fa-eye" aria-hidden="true"></i> 1,208 views</span>
+                        <span><i class="far fa-clock" aria-hidden="true"></i> 15:30</span>
+                        <span><i class="far fa-calendar" aria-hidden="true"></i> Updated 2 days ago</span>
+                    </div>
+                    <a href="<?= htmlspecialchars(url('watch-video')) ?>" class="inline-btn">Watch tutorial</a>
+                </div>
+            </article>
 
-    <div class="featured-section">
-        <h2>Featured Tutorials</h2>
-        <div class="box-container">
-            <div class="box">
-                <div class="video">
-                    <div>
-                        <h3>How to apply for E-sell property</h3>
-                        <span>Step-by-step guide</span>
+            <article class="learn-more-card" data-category="egov">
+                <a class="learn-more-card-thumb" href="<?= htmlspecialchars(url('watch-video2')) ?>" aria-hidden="true" tabindex="-1">
+                    <span class="learn-more-card-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                </a>
+                <div class="learn-more-card-body">
+                    <h3 class="learn-more-card-title"><a href="<?= htmlspecialchars(url('watch-video2')) ?>">E-government services</a></h3>
+                    <p class="learn-more-card-sub">Complete overview</p>
+                    <div class="learn-more-meta">
+                        <span><i class="fas fa-eye" aria-hidden="true"></i> 1,088 views</span>
+                        <span><i class="far fa-clock" aria-hidden="true"></i> 12:45</span>
+                        <span><i class="far fa-calendar" aria-hidden="true"></i> Updated 1 week ago</span>
                     </div>
+                    <a href="<?= htmlspecialchars(url('watch-video2')) ?>" class="inline-btn">Watch tutorial</a>
                 </div>
-                <p><i class="fas fa-eye"></i> Total views: <span>1,208</span></p>
-                <div class="video-info">
-                    <div class="duration">
-                        <i class="far fa-clock"></i> 15:30
-                    </div>
-                    <div class="duration">
-                        <i class="fas fa-calendar"></i> Updated: 2 days ago
-                    </div>
-                </div>
-                <a href="watch-video" class="inline-btn">Watch Tutorial</a>
-            </div>
-
-            <div class="box">
-                <div class="tutor">
-                    <div>
-                        <h3>E-government Services</h3>
-                        <span>Complete overview</span>
-                    </div>
-                </div>
-                <p><i class="fas fa-eye"></i> Total views: <span>1,088</span></p>
-                <div class="video-info">
-                    <div class="duration">
-                        <i class="far fa-clock"></i> 12:45
-                    </div>
-                    <div class="duration">
-                        <i class="fas fa-calendar"></i> Updated: 1 week ago
-                    </div>
-                </div>
-                <a href="watch-video2" class="inline-btn">Watch Tutorial</a>
-            </div>
+            </article>
         </div>
-    </div>
+    </section>
 
-    <div class="featured-section">
-        <h2>Popular Tutorials</h2>
-        <div class="box-container">
-            <div class="box">
-                <div class="video">
-                    <div>
-                        <h3>Property Documentation Guide</h3>
-                        <span>Required documents</span>
+    <section class="learn-more-section" aria-labelledby="popular-heading">
+        <h2 class="heading" id="popular-heading">Popular tutorials</h2>
+        <p class="learn-more-section-intro">Frequently opened guides from citizens and staff.</p>
+        <div class="learn-more-grid">
+            <article class="learn-more-card" data-category="docs">
+                <a class="learn-more-card-thumb" href="<?= htmlspecialchars(url('watch-video')) ?>" aria-hidden="true" tabindex="-1">
+                    <span class="learn-more-card-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                </a>
+                <div class="learn-more-card-body">
+                    <h3 class="learn-more-card-title"><a href="<?= htmlspecialchars(url('watch-video')) ?>">Property documentation guide</a></h3>
+                    <p class="learn-more-card-sub">Required documents</p>
+                    <div class="learn-more-meta">
+                        <span><i class="fas fa-eye" aria-hidden="true"></i> 956 views</span>
+                        <span><i class="far fa-clock" aria-hidden="true"></i> 18:20</span>
+                        <span><i class="far fa-calendar" aria-hidden="true"></i> Updated 3 days ago</span>
                     </div>
+                    <a href="<?= htmlspecialchars(url('watch-video')) ?>" class="inline-btn">Watch tutorial</a>
                 </div>
-                <p><i class="fas fa-eye"></i> Total views: <span>956</span></p>
-                <div class="video-info">
-                    <div class="duration">
-                        <i class="far fa-clock"></i> 18:20
-                    </div>
-                    <div class="duration">
-                        <i class="fas fa-calendar"></i> Updated: 3 days ago
-                    </div>
-                </div>
-                <a href="watch-video3" class="inline-btn">Watch Tutorial</a>
-            </div>
+            </article>
 
-            <div class="box">
-                <div class="tutor">
-                    <div>
-                        <h3>Digital Signature Process</h3>
-                        <span>Security guide</span>
+            <article class="learn-more-card" data-category="egov">
+                <a class="learn-more-card-thumb" href="<?= htmlspecialchars(url('watch-video2')) ?>" aria-hidden="true" tabindex="-1">
+                    <span class="learn-more-card-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                </a>
+                <div class="learn-more-card-body">
+                    <h3 class="learn-more-card-title"><a href="<?= htmlspecialchars(url('watch-video2')) ?>">Digital signature process</a></h3>
+                    <p class="learn-more-card-sub">Security &amp; identity</p>
+                    <div class="learn-more-meta">
+                        <span><i class="fas fa-eye" aria-hidden="true"></i> 845 views</span>
+                        <span><i class="far fa-clock" aria-hidden="true"></i> 10:15</span>
+                        <span><i class="far fa-calendar" aria-hidden="true"></i> Updated 5 days ago</span>
                     </div>
+                    <a href="<?= htmlspecialchars(url('watch-video2')) ?>" class="inline-btn">Watch tutorial</a>
                 </div>
-                <p><i class="fas fa-eye"></i> Total views: <span>845</span></p>
-                <div class="video-info">
-                    <div class="duration">
-                        <i class="far fa-clock"></i> 10:15
+            </article>
+
+            <article class="learn-more-card" data-category="sales">
+                <a class="learn-more-card-thumb" href="<?= htmlspecialchars(url('watch-video')) ?>" aria-hidden="true" tabindex="-1">
+                    <span class="learn-more-card-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                </a>
+                <div class="learn-more-card-body">
+                    <h3 class="learn-more-card-title"><a href="<?= htmlspecialchars(url('watch-video')) ?>">Transfer workflow overview</a></h3>
+                    <p class="learn-more-card-sub">From request to registration</p>
+                    <div class="learn-more-meta">
+                        <span><i class="fas fa-eye" aria-hidden="true"></i> 712 views</span>
+                        <span><i class="far fa-clock" aria-hidden="true"></i> 22:04</span>
+                        <span><i class="far fa-calendar" aria-hidden="true"></i> Updated 1 week ago</span>
                     </div>
-                    <div class="duration">
-                        <i class="fas fa-calendar"></i> Updated: 5 days ago
-                    </div>
+                    <a href="<?= htmlspecialchars(url('watch-video')) ?>" class="inline-btn">Watch tutorial</a>
                 </div>
-                <a href="watch-video4" class="inline-btn">Watch Tutorial</a>
-            </div>
+            </article>
+
+            <article class="learn-more-card" data-category="faq">
+                <a class="learn-more-card-thumb" href="<?= htmlspecialchars(url('watch-video2')) ?>" aria-hidden="true" tabindex="-1">
+                    <span class="learn-more-card-play" aria-hidden="true"><i class="fas fa-play"></i></span>
+                </a>
+                <div class="learn-more-card-body">
+                    <h3 class="learn-more-card-title"><a href="<?= htmlspecialchars(url('watch-video2')) ?>">Common questions (FAQ)</a></h3>
+                    <p class="learn-more-card-sub">Wait times, fees, and channels</p>
+                    <div class="learn-more-meta">
+                        <span><i class="fas fa-eye" aria-hidden="true"></i> 2,401 views</span>
+                        <span><i class="far fa-clock" aria-hidden="true"></i> 8:50</span>
+                        <span><i class="far fa-calendar" aria-hidden="true"></i> Updated 4 days ago</span>
+                    </div>
+                    <a href="<?= htmlspecialchars(url('watch-video2')) ?>" class="inline-btn">Watch tutorial</a>
+                </div>
+            </article>
         </div>
-    </div>
-</section>
+    </section>
 
-<!-- Add Font Awesome for icons -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <p class="learn-more-empty" id="learn-more-empty" hidden>No tutorials in this category yet.</p>
+
+    <div class="page-actions learn-more-actions">
+        <a href="<?= htmlspecialchars(url('contact')) ?>" class="btn">Contact us</a>
+        <a href="<?= htmlspecialchars(url('about')) ?>" class="btn btn-outline">About DLS</a>
+        <a href="<?= htmlspecialchars(url('')) ?>" class="btn btn-outline">Back to home</a>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var tabs = document.querySelectorAll('.learn-more-tab');
+    var cards = document.querySelectorAll('.learn-more-card');
+    var emptyMsg = document.getElementById('learn-more-empty');
+    if (!tabs.length || !cards.length) return;
+
+    function applyFilter(filter) {
+        var visible = 0;
+        cards.forEach(function (card) {
+            var cats = (card.getAttribute('data-category') || '').trim().split(/\s+/);
+            var show = filter === 'all' || cats.indexOf(filter) !== -1;
+            card.hidden = !show;
+            if (show) visible++;
+        });
+        if (emptyMsg) emptyMsg.hidden = visible !== 0;
+    }
+
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            var filter = tab.getAttribute('data-filter') || 'all';
+            tabs.forEach(function (t) {
+                t.classList.toggle('active', t === tab);
+                t.setAttribute('aria-selected', t === tab ? 'true' : 'false');
+            });
+            applyFilter(filter);
+        });
+    });
+});
+</script>

@@ -22,6 +22,18 @@ class AuthMiddleware {
         }
     }
 
+    /**
+     * Staff roles: employee or admin.
+     */
+    public static function requireStaff(): void
+    {
+        self::requireLogin();
+        if (!isset($_SESSION['role']) || !in_array((int)$_SESSION['role'], [self::ROLE_EMPLOYEE, self::ROLE_ADMIN], true)) {
+            header('Location: /home');
+            exit();
+        }
+    }
+
     public static function requireAdmin() {
         self::requireLogin();
         if (!isset($_SESSION['role']) || $_SESSION['role'] != self::ROLE_ADMIN) {

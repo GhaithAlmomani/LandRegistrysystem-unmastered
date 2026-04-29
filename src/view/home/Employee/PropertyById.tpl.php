@@ -2,154 +2,144 @@
 require_once __DIR__ . '/../../../../src/middleware/AuthMiddleware.php';
 use MVC\middleware\AuthMiddleware;
 
-// Ensure only employees can access this page
 AuthMiddleware::requireEmployee();
-
-require_once __DIR__ . '/../../layouts/navbar.tpl.php';
 ?>
 
-<section>
-    <h1 class="heading">Employee Portal</h1>
-
-    <style>
-        /* Container Styling */
-        .container {
-            max-width: 700px; /* Increased max width for the container */
-            margin: 3rem auto; /* Center the container with more margin */
-            padding: 3rem; /* Increased padding inside the container */
-            background-color: var(--white); /* Background color for the container */
-            border-radius: .5rem; /* Rounded corners */
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Increased shadow for depth */
-        }
-
-        /* Heading Styling */
-        .form-heading {
-            font-size: 3rem; /* Increased font size for the heading */
-            color: var(--black); /* Color for the heading */
-            margin-bottom: 2rem; /* Increased space below the heading */
-            text-align: center; /* Center align the heading */
-        }
-
-        /* Form Group Styling */
-        .mb-3 {
-            margin-bottom: 2rem; /* Increased space below each form group */
-        }
-
-        /* Label Styling */
-        .form-label {
-            font-size: 2rem; /* Increased font size for labels */
-            color: var(--black); /* Color for labels */
-            margin-bottom: .75rem; /* Increased space below the label */
-            display: block; /* Ensure labels are block elements */
-        }
-
-        /* Input Styling */
-        .form-control {
-            width: 100%; /* Full width */
-            padding: 1.5rem; /* Increased padding inside the input */
-            font-size: 1.8rem; /* Increased font size for input text */
-            border: var(--border); /* Border style */
-            border-radius: .5rem; /* Rounded corners */
-            background-color: var(--light-bg); /* Background color */
-            color: var(--black); /* Text color */
-            margin-bottom: .75rem; /* Increased space below the input */
-            transition: border-color 0.3s; /* Smooth transition for border color */
-        }
-
-        /* Input Focus State */
-        .form-control:focus {
-            border-color: var(--main-color); /* Change border color on focus */
-            outline: none; /* Remove default outline */
-        }
-
-        /* Help Text */
-        .form-text {
-            font-size: 1.6rem; /* Increased help text font size */
-            color: var(--light-color); /* Help text color */
-            margin-top: .5rem; /* Space above help text */
-        }
-
-        /* Button Styling */
-        .btn-primary {
-            background-color: var(--main-color); /* Button background color */
-            color: var(--white); /* Button text color */
-            font-size: 2rem; /* Increased button font size */
-            padding: 1.5rem 2.5rem; /* Increased padding for the button */
-            border-radius: .5rem; /* Rounded corners */
-            cursor: pointer; /* Pointer cursor on hover */
-            transition: background-color 0.3s; /* Smooth transition for background color */
-            width: 100%; /* Full width for the button */
-        }
-
-        /* Button Hover State */
-        .btn-primary:hover {
-            background-color: var(--black); /* Change background color on hover */
-        }
-
-        /* Output Styling */
-        .output {
-            margin-top: 2rem; /* Space above the output area */
-            padding: 1.5rem; /* Padding inside the output area */
-            border-radius: .5rem; /* Rounded corners */
-            background-color: var(--light-bg); /* Background color for the output */
-            color: var(--black); /* Text color for the output */
-            font-size: 1.6rem; /* Font size for the output text */
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
-        }
-    </style>
-
-    <div class="container">
-        <div class="mb-3">
-            <h1 class="form-heading">Get Property By ID</h1>
-            <label for="propertyId" class="form-label">Enter Property ID:</label>
-            <input type="number" class="form-control" id="propertyId" placeholder="Property ID" aria-describedby="propertyIdHelp" required>
-            <div id="propertyIdHelp" class="form-text">Enter the ID of the property you want to fetch.</div>
+<section class="admin-page registry-lookup-page">
+    <header class="registry-lookup-hero card">
+        <div class="registry-lookup-hero__badge admin-portal-badge">
+            <i class="fa-solid fa-hashtag" aria-hidden="true"></i>
+            <span>Registry Lookup</span>
         </div>
+        <h1 class="heading registry-lookup-hero__title">Property by ID</h1>
+        <p class="registry-lookup-hero__lead">
+            Fetch a single parcel by its on-chain property identifier. Connect MetaMask on the same network as the registry contract.
+        </p>
+    </header>
 
-        <div class="mb-3">
-            <button class="btn btn-primary" onclick="getPropertyById()">Fetch Property</button>
-        </div>
+    <div id="alertContainer" class="registry-lookup-alerts" aria-live="polite"></div>
+    <div id="walletStatus" class="admin-page-status" role="status">Connecting to wallet…</div>
 
-        <div class="output" id="output"></div>
+    <div class="card admin-page-card">
+        <h2 class="title" style="margin-top:0;">Look up</h2>
+        <form id="propertyByIdForm" class="admin-page-form" action="#" method="get">
+            <label class="admin-page-label" for="propertyId">Property ID</label>
+            <div class="admin-search-row">
+                <input type="text" class="box" id="propertyId" name="propertyId" inputmode="numeric" required
+                       placeholder="e.g. 0" autocomplete="off" aria-describedby="propertyIdHelp">
+                <button type="submit" class="inline-btn">
+                    <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+                    Fetch
+                </button>
+            </div>
+            <p class="admin-page-help" id="propertyIdHelp">On-chain property ID from the registry.</p>
+        </form>
     </div>
 
-    <script>
+    <div class="card admin-page-card" id="resultCard" hidden>
+        <h2 class="title" style="margin-top:0;">Result</h2>
+        <div id="output" class="registry-lookup-output"></div>
+    </div>
+</section>
 
-        let web3;
-        let contract;
+<script>
+(function () {
+    var web3;
+    var contract;
 
-        // Initialize web3
-        window.addEventListener('load', async () => {
-            if (window.ethereum) {
-                web3 = new Web3(window.ethereum);
-                await window.ethereum.request({ method: 'eth_requestAccounts' });
-                contract = new web3.eth.Contract(contractABI, contractAddress);
-            } else {
-                alert("Please install MetaMask to use this feature.");
+    function showAlert(message, type) {
+        type = type || 'info';
+        var elBox = document.getElementById('alertContainer');
+        if (!elBox) return;
+        var map = { success: 'pt-alert--success', error: 'pt-alert--error', info: 'pt-alert--info' };
+        var cls = map[type] || map.info;
+        var el = document.createElement('div');
+        el.className = 'pt-alert ' + cls;
+        el.innerHTML =
+            '<span class="pt-alert__msg"></span>' +
+            '<button type="button" class="pt-alert__close" aria-label="Dismiss">&times;</button>';
+        el.querySelector('.pt-alert__msg').textContent = message;
+        el.querySelector('.pt-alert__close').addEventListener('click', function () { el.remove(); });
+        elBox.appendChild(el);
+        window.setTimeout(function () {
+            el.classList.add('pt-alert--fade');
+            window.setTimeout(function () { el.remove(); }, 320);
+        }, 5200);
+    }
+
+    function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s == null ? '' : String(s);
+        return d.innerHTML;
+    }
+
+    window.addEventListener('load', async function () {
+        var statusEl = document.getElementById('walletStatus');
+        if (!window.ethereum) {
+            if (statusEl) {
+                statusEl.textContent = 'MetaMask is not installed.';
+                statusEl.className = 'admin-page-status is-error';
             }
-        });
-
-        async function getPropertyById() {
-            const propertyId = document.getElementById("propertyId").value;
-            const output = document.getElementById("output");
-
-            if (!propertyId) {
-                output.textContent = "Please enter a property ID.";
-                return;
+            showAlert('Please install MetaMask to use this feature.', 'error');
+            return;
+        }
+        try {
+            web3 = new Web3(window.ethereum);
+            await window.ethereum.request({ method: 'eth_requestAccounts' });
+            contract = new web3.eth.Contract(contractABI, contractAddress);
+            var accounts = await web3.eth.getAccounts();
+            if (statusEl) {
+                statusEl.innerHTML = 'Connected: <span class="contract-address">' + (accounts[0] || '') + '</span>';
+                statusEl.className = 'admin-page-status is-success';
             }
-
-            try {
-                const property = await contract.methods.getPropertyById(propertyId).call();
-                output.innerHTML = `
-                    <p><strong>ID:</strong> ${property[0]}</p>
-                    <p><strong>Owner:</strong> ${property[1]}</p>
-                    <p><strong>Description:</strong> ${property[2]}</p>
-                    <p><strong>Latitude:</strong> ${property[3]}</p>
-                    <p><strong>Longitude:</strong> ${property[4]}</p>
-                `;
-            } catch (error) {
-                output.textContent = `Error fetching property: ${error.message}`;
+            showAlert('Wallet connected.', 'success');
+        } catch (e) {
+            showAlert((e && e.message) || String(e), 'error');
+            if (statusEl) {
+                statusEl.textContent = 'Wallet connection failed.';
+                statusEl.className = 'admin-page-status is-error';
             }
         }
-    </script>
-</section>
+    });
+
+    document.getElementById('propertyByIdForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var propertyId = document.getElementById('propertyId').value.trim();
+        var output = document.getElementById('output');
+        var resultCard = document.getElementById('resultCard');
+
+        if (!propertyId) {
+            showAlert('Please enter a property ID.', 'error');
+            return;
+        }
+        if (!contract) {
+            showAlert('Contract not ready. Connect MetaMask and wait.', 'error');
+            return;
+        }
+
+        try {
+            var property = await contract.methods.getPropertyById(propertyId).call();
+            var id = property.id != null ? property.id : property[0];
+            var owner = property.owner != null ? property.owner : property[1];
+            var description = property.description != null ? property.description : property[2];
+            var latitude = property.latitude != null ? property.latitude : property[3];
+            var longitude = property.longitude != null ? property.longitude : property[4];
+
+            output.innerHTML =
+                '<dl class="registry-lookup-dl">' +
+                '<dt>ID</dt><dd>' + escapeHtml(id) + '</dd>' +
+                '<dt>Owner</dt><dd class="contract-wrap">' + escapeHtml(owner) + '</dd>' +
+                '<dt>Description</dt><dd>' + escapeHtml(description) + '</dd>' +
+                '<dt>Latitude</dt><dd>' + escapeHtml(latitude) + '</dd>' +
+                '<dt>Longitude</dt><dd>' + escapeHtml(longitude) + '</dd>' +
+                '</dl>';
+            resultCard.hidden = false;
+            showAlert('Property loaded.', 'success');
+        } catch (error) {
+            resultCard.hidden = true;
+            output.innerHTML = '';
+            showAlert((error && error.message) ? error.message : 'Failed to fetch property.', 'error');
+        }
+    });
+})();
+</script>
